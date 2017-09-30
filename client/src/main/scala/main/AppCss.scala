@@ -10,7 +10,8 @@ object AppCss {
   def load = {
     GlobalRegistry.register(
       GlobalStyle,
-      ElementList.Style
+      ElementList.Style,
+      components.EditingModeHeader.Style
     )
 
     GlobalRegistry.onRegistration(_.addToDocument())

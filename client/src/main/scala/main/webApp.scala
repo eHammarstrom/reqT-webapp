@@ -213,6 +213,7 @@ object webApp extends js.JSApp {
         <.div(
           cachedModelsDivStyle,
           cachedModels((P, S)),
+          components.EditingModeHeader(),
           sc(proxy => treeView(proxy))
         )
       )
