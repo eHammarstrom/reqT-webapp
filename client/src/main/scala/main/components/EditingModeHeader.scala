@@ -46,34 +46,42 @@ object EditingModeHeader {
     val Text, Tree = Value
   }
 
-  case class State(activeButton: Buttons.Value)
-
-  def editingModeButton(name: String, isActive: Boolean, setButton: Callback) = Seq(
+  def editingModeButton(name: String, isActive: Boolean,
+                        setButton: Callback, followUpCb: Callback = Callback()) =
+    Seq(
       <.button(
         ^.className := "btn" ++ (if (isActive) " btn-primary" else " btn-default"),
-        ^.onClick --> setButton,
+        ^.onClick --> (setButton >> followUpCb),
         Style.editingModeButton,
         name)
     )
 
-  val editingModeHeader = ReactComponentB[State]("editingModeHeader")
-      .initialState(State(activeButton = Buttons.Tree))
-    .render($ => <.div(
+  case class State(activeButton: Buttons.Value)
+
+  case class Props(setTreeView: Callback, setTextView: Callback)
+
+  val editingModeHeader = ReactComponentB[(Props, State)]("editingModeHeader")
+    .initialState(State(activeButton = Buttons.Tree))
+    .render($ =>
+      <.div(
       Style.editingMode,
-      <.p(Style.viewModeLabel, "View"),
+      //<.p(Style.viewModeLabel, "View"),
       editingModeButton(
         "Tree",
         isActive = $.state.activeButton == Buttons.Tree,
-        $.modState(_.copy(activeButton = Buttons.Tree))
+        $.modState(_.copy(activeButton = Buttons.Tree)),
+        $.props._1.setTreeView
       ),
       <.div(Style.delimiter), // Delimiter "invisible block"
       editingModeButton(
         "Text",
         isActive = $.state.activeButton == Buttons.Text,
-        $.modState(_.copy(activeButton = Buttons.Text))
+        $.modState(_.copy(activeButton = Buttons.Text)),
+        $.props._1.setTextView
       )
     )
     ).build
 
-  def apply() = editingModeHeader.set()(State(activeButton = Buttons.Tree))
+  def apply(setTreeView: Callback, setTextView: Callback) =
+    editingModeHeader.set()((Props(setTreeView, setTextView), State(Buttons.Tree)))
 }

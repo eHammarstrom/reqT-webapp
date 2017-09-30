@@ -9,6 +9,8 @@ import japgolly.scalajs.react.vdom.prefix_<^.{<, _}
 import japgolly.scalajs.react._
 import diode.react.ModelProxy
 import modals.NewModelModal
+import components.EditingModeHeader
+import components.TextEditor
 
 import scalacss.ScalaCssReact._
 import scalacss.Defaults._
@@ -126,7 +128,13 @@ object webApp extends js.JSApp {
 
   case class State(cachedModels: Queue[CachedModel] = Queue(CachedModel("untitled", emptyTree, selected = true, uUID = UUID.random())),
                    isNewModelModalOpen: Boolean = false, saveModelType: String = "rec",
-                   isMethodStarted: Boolean = false, scrollPosition: Double = 0, newModel: Tree = emptyTree, method: Seq[String] = Seq())
+                   isMethodStarted: Boolean = false, scrollPosition: Double = 0,
+                   newModel: Tree = emptyTree, method: Seq[String] = Seq(),
+                   editorView: EditorView.Value = EditorView.Tree)
+
+  object EditorView extends Enumeration {
+    val Text, Tree = Value
+  }
 
   val emptyTree = Tree(Seq())
 
@@ -138,7 +146,6 @@ object webApp extends js.JSApp {
     case relation: Relation => TreeItem(relation.entity, relation.entity.uuid, relation.submodel.children.map(convert), Some(relation.link))
     case node: shared.Node => TreeItem(node, node.uuid, Seq(), None)
   }
-
 
   class Backend($: BackendScope[Props, State]) {
 
@@ -153,7 +160,6 @@ object webApp extends js.JSApp {
 
     def openNewModelModal(newSaveModelType: String, newModel: Tree): Callback = $.modState(_.copy(isNewModelModalOpen = true,
       saveModelType = newSaveModelType, newModel = newModel))
-
 
     val treeView = ReactComponentB[ModelProxy[Tree]]("treeView")
       .render(P => <.pre(
@@ -177,14 +183,14 @@ object webApp extends js.JSApp {
       ))
       .build
 
-
+    // FIXME: This throws when TextEditor is activated because of getId
     def setScroll(scrollPosition: Double): Callback = {
       val pre = document.getElementById("treeView").asInstanceOf[dom.html.Pre]
       Callback(pre.scrollTop = scrollPosition)
     }
 
+    // FIXME: This throws when TextEditor is activated because of getId
     def getScroll: Callback = $.modState(_.copy(scrollPosition = document.getElementById("treeView").scrollTop))
-
 
     def saveModel(name: String, model: Tree, P: Props, S: State): Callback = {
       var m = new CachedModel(name, model ,selected = false, UUID.random())
@@ -198,6 +204,11 @@ object webApp extends js.JSApp {
 
     def render(P: Props, S: State) = {
       val sc = AppCircuit.connect(_.tree)
+      val editingModeHeader =
+        EditingModeHeader(
+          setTreeView = $.modState(_.copy(editorView = EditorView.Tree)),
+          setTextView = $.modState(_.copy(editorView = EditorView.Text)))
+
       <.div(
         NewModelModal(isOpen = S.isNewModelModalOpen, onClose = closeNewModelModal, saveModel = saveModel(_, _, P, S), S.newModel, S.saveModelType),
         contentDivStyle,
@@ -213,8 +224,11 @@ object webApp extends js.JSApp {
         <.div(
           cachedModelsDivStyle,
           cachedModels((P, S)),
-          components.EditingModeHeader(),
-          sc(proxy => treeView(proxy))
+          editingModeHeader,
+          S.editorView match {
+            case EditorView.Tree => sc(treeView(_))
+            case EditorView.Text => sc(TextEditor(_))
+          }
         )
       )
     }
@@ -268,11 +282,9 @@ object webApp extends js.JSApp {
 
     def getActiveModelName: Option[CachedModel] = $.accessDirect.state.cachedModels.find(_.selected)
 
-
     def setActiveModel(cachedModel: CachedModel, P: Props, S: State): Callback = {
       updateActiveModel(cachedModel, P, S) >> P.proxy.dispatchCB(SetModel(cachedModel.model.children))
     }
-
 
     def updateActiveModel(cachedModel: CachedModel, P: Props, S: State): Callback = {
       val newModels: Queue[CachedModel] = S.cachedModels.map(model =>
@@ -292,7 +304,6 @@ object webApp extends js.JSApp {
 
       $.modState(_.copy(cachedModels = beginning ++ end))
     }
-
   }
 
   val pageContent = ReactComponentB[Props]("Content")
@@ -303,7 +314,6 @@ object webApp extends js.JSApp {
       x.$.backend.setScroll(x.currentState.scrollPosition)
     })
     .build
-
 
   val dc = AppCircuit.connect(_.tree)
 
