@@ -39,7 +39,8 @@ lazy val client = (project in file("client")).settings(
   jsDependencies ++=Seq(
     "org.webjars.bower" % "react" % "15.3.2" / "react-with-addons.js" minified "react-with-addons.min.js" commonJSName "React",
     "org.webjars.bower" % "react" % "15.3.2" / "react-dom.js" minified "react-dom.min.js" dependsOn "react-with-addons.js" commonJSName "ReactDOM",
-    "org.webjars.bower" % "react" % "15.3.2" / "react-dom-server.js" minified "react-dom-server.min.js" dependsOn "react-dom.js" commonJSName "ReactDOMServer"
+    "org.webjars.bower" % "react" % "15.3.2" / "react-dom-server.js" minified "react-dom-server.min.js" dependsOn "react-dom.js" commonJSName "ReactDOMServer",
+    ProvidedJS / "highlight.pack.js" commonJSName "hljs"
   ),
   skip in packageJSDependencies := false // creates app-jsdeps.js with the react JS lib inside
 ).enablePlugins(ScalaJSPlugin, ScalaJSWeb).
