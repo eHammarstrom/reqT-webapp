@@ -11,7 +11,8 @@ object AppCss {
     GlobalRegistry.register(
       GlobalStyle,
       ElementList.Style,
-      components.EditingModeHeader.Style
+      components.EditingModeHeader.Style,
+      components.TextEditor.Style
     )
 
     GlobalRegistry.onRegistration(_.addToDocument())
