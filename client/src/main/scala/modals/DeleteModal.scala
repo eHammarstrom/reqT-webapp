@@ -2,15 +2,15 @@ package modals
 
 import diode.Action
 import main.TreeItem
-import japgolly.scalajs.react.vdom.prefix_<^.{<, ^, _}
-import japgolly.scalajs.react.{BackendScope, Callback, ReactComponentB, _}
+import japgolly.scalajs.react.vdom.html_<^.{<, ^, _}
+import japgolly.scalajs.react.{BackendScope, Callback, ScalaComponent, _}
 import org.scalajs.dom.ext.KeyCode
 import shared._
 
 
 object DeleteModal {
 
-  def modalStyle = Seq(
+  val modalStyle: TagMod = Seq(
     ^.width := "400px",
     ^.padding := "5px",
     ^.position := "absolute",
@@ -26,9 +26,9 @@ object DeleteModal {
     ^.paddingTop := "15px",
     ^.paddingLeft := "15px",
     ^.boxShadow := "rgba(0, 0, 0, 0.2) 5px 6px 12px 0px"
-  )
+  ).toTagMod
 
-  def backdropStyle = Seq(
+  val backdropStyle: TagMod = Seq(
     ^.position := "absolute",
     ^.width := "100%",
     ^.height := "100%",
@@ -37,14 +37,14 @@ object DeleteModal {
     ^.zIndex := "9998",
     ^.background := "#CCC",
     ^.opacity := "0.5"
-  )
+  ).toTagMod
 
-  def buttonAreaStyle = Seq(
+  val buttonAreaStyle: TagMod = Seq(
     ^.width := "95%",
     ^.padding := "20px",
     ^.display.flex,
     ^.justifyContent.spaceBetween
-  )
+  ).toTagMod
 
   case class State()
 
@@ -54,7 +54,7 @@ object DeleteModal {
     def render(P: Props, S: State) =
       if (P.isOpen) {
         <.div(
-          ^.autoFocus := "true",
+          ^.autoFocus := true,
           ^.onKeyDown ==> handleKeyDown(P, S),
           <.div(
             modalStyle,
@@ -68,7 +68,7 @@ object DeleteModal {
       } else
         <.div()
 
-    def handleKeyDown(P: Props, S: State)(e: ReactKeyboardEventI): Callback = {
+    def handleKeyDown(P: Props, S: State)(e: ReactKeyboardEventFromInput): Callback = {
       if (e.nativeEvent.keyCode == KeyCode.Escape) {
         P.onClose
       } else if (e.nativeEvent.keyCode == KeyCode.Enter) {
@@ -78,10 +78,8 @@ object DeleteModal {
       }
     }
 
-    def deleteElemModalStyle(P: Props, S: State) =
-
+    def deleteElemModalStyle(P: Props, S: State): TagMod =
       P.treeItem.item match {
-
         case "Model" => Seq(
           <.h5(
             "Do you want to delete the entire model?",
@@ -93,8 +91,7 @@ object DeleteModal {
             <.button("Cancel", ^.className := "btn btn-default", ^.bottom := "0px", ^.onClick --> P.onClose),
             <.button("Delete", ^.className := "btn btn-danger", ^.bottom := "0px", ^.onClick --> onDelete(P))
           )
-        )
-
+        ).toTagMod
         case item => Seq(
           <.h5(
             "Do you want to delete the following?",
@@ -114,7 +111,7 @@ object DeleteModal {
               ^.whiteSpace := "pre-line",
               P.treeItem.contentToString
             ),
-            P.treeItem.children.nonEmpty ?= <.hr,
+            <.hr.when(P.treeItem.children.nonEmpty),
             <.dt(
               ^.textAlign := "center",
               ^.color := "#FF3636",
@@ -123,12 +120,13 @@ object DeleteModal {
             <.dl(
               ^.className := "dl-horizontal"
             ),
-            P.treeItem.children.nonEmpty ?= <.br, <.hr,
+            <.br.when(P.treeItem.children.nonEmpty),
+            <.hr,
             <.div(
               ^.maxHeight := "300px",
               ^.overflowY := "auto",
               P.treeItem.children.map(child => {
-                Seq(
+                (Seq(
                   <.dt(
                     child.nodeToString.replaceAll("TreeItem", ""),
                     ^.textAlign := "center",
@@ -142,17 +140,17 @@ object DeleteModal {
                     child.contentToString
                   ),
                   <.br
-                )
-              })
+                ): Seq[TagMod]).toTagMod
+              }).toTagMod
             ),
-            P.treeItem.children.nonEmpty ?= <.br
+            <.br.when(P.treeItem.children.nonEmpty)
           ),
           <.div(
             buttonAreaStyle,
             <.button("Cancel", ^.className := "btn btn-default", ^.bottom := "0px", ^.onClick --> P.onClose),
             <.button("Delete", ^.className := "btn btn-danger", ^.bottom := "0px", ^.onClick --> onDelete(P))
           )
-        )
+        ).toTagMod
       }
 
 
@@ -168,11 +166,11 @@ object DeleteModal {
   }
 
 
-  val component = ReactComponentB[Props]("Modal")
+  val component = ScalaComponent.builder[Props]("Modal")
     .initialState(State())
     .renderBackend[Backend]
     .build
 
   def apply(isOpen: Boolean, onClose: Callback, treeItem: TreeItem, dispatch: (Action => Callback), path: Seq[String])
-  = component.set()(Props(isOpen, onClose, treeItem, dispatch, path))
+  = component(Props(isOpen, onClose, treeItem, dispatch, path))
 }

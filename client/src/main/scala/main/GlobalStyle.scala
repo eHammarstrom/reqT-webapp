@@ -1,6 +1,6 @@
 package main
 
-import scalacss.Defaults._
+import scalacss.ProdDefaults._
 
 object GlobalStyle extends StyleSheet.Inline {
 

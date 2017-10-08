@@ -1,7 +1,7 @@
 package modals
 
-import japgolly.scalajs.react.vdom.prefix_<^.{<, ^, _}
-import japgolly.scalajs.react.{BackendScope, Callback, ReactComponentB, ReactKeyboardEventI, _}
+import japgolly.scalajs.react.vdom.html_<^.{<, ^, _}
+import japgolly.scalajs.react.{BackendScope, Callback, ScalaComponent, ReactKeyboardEventFromInput, _}
 import org.scalajs.dom.ext.KeyCode
 import selects.{AttributeSelect, EntitySelect}
 import shared._
@@ -9,7 +9,7 @@ import shared._
 
 object HundredDollarModal {
 
-  def modalStyle = Seq(
+  val modalStyle: TagMod = Seq(
     ^.width := "400px",
     ^.padding := "5px",
     ^.position := "absolute",
@@ -25,9 +25,9 @@ object HundredDollarModal {
     ^.paddingTop := "15px",
     ^.paddingLeft := "15px",
     ^.boxShadow := "rgba(0, 0, 0, 0.2) 5px 6px 12px 0px"
-  )
+  ).toTagMod
 
-  def backdropStyle = Seq(
+  val backdropStyle: TagMod = Seq(
     ^.position := "absolute",
     ^.width := "100%",
     ^.height := "100%",
@@ -36,14 +36,14 @@ object HundredDollarModal {
     ^.zIndex := "9998",
     ^.background := "#CCC",
     ^.opacity := "0.5"
-  )
+  ).toTagMod
 
-  val buttonAreaStyle = Seq(
+  val buttonAreaStyle: TagMod = Seq(
     ^.width := "95%",
     ^.padding := "20px",
     ^.display.flex,
     ^.justifyContent.spaceBetween
-  )
+  ).toTagMod
 
   case class State(newSHSEntity: Option[Entity], newRSEntity: Option[Entity], newBAttribute: Option[Attribute], newPAttribute: Option[Attribute])
 
@@ -96,7 +96,7 @@ object HundredDollarModal {
             <.div(
               buttonAreaStyle,
               <.button("Cancel", ^.className := "btn btn-default pull-right", ^.bottom := "0px", ^.onClick --> onClose(P)),
-              <.button("OK", ^.className := "btn btn-success pull-right", ^.autoFocus := "true", ^.bottom := "0px", ^.onClick --> sendMethod(P, S))
+              <.button("OK", ^.className := "btn btn-success pull-right", ^.autoFocus := true, ^.bottom := "0px", ^.onClick --> sendMethod(P, S))
             )),
           <.div(
             backdropStyle,
@@ -137,7 +137,7 @@ object HundredDollarModal {
 
     def onClose(P: Props): Callback = P.onClose() >> resetState
 
-    def handleKeyDown(P: Props, S: State)(e: ReactKeyboardEventI): Callback = {
+    def handleKeyDown(P: Props, S: State)(e: ReactKeyboardEventFromInput): Callback = {
       if (e.nativeEvent.keyCode == KeyCode.Escape) {
         onClose(P)
       }
@@ -147,13 +147,13 @@ object HundredDollarModal {
   }
 
 
-  val component = ReactComponentB[Props]("Modal")
+  val component = ScalaComponent.builder[Props]("Modal")
     .initialState(State(None, None, None, None))
     .renderBackend[Backend]
     .build
 
 
   def apply(isOpen: Boolean, onClose: () => Callback, sendMethod: Seq[String] => Callback, model: String)
-  = component.set()(Props(isOpen, onClose, sendMethod, model))
+  = component(Props(isOpen, onClose, sendMethod, model))
 
 }

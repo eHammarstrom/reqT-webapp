@@ -22,18 +22,15 @@ lazy val server = (project in file("server")).settings(
 
 lazy val client = (project in file("client")).settings(
   scalaVersion := scalaV,
-  persistLauncher := true,
-  persistLauncher in Test := false,
-  //mainClass in Compile := Some("ScalaJSExample.main"),
-
+  scalaJSUseMainModuleInitializer := true,
   libraryDependencies ++= Seq(
-    "com.github.japgolly.scalacss" %%% "ext-react" % "0.5.1",
+    "com.github.japgolly.scalacss" %%% "ext-react" % "0.5.3",
     "org.scala-js" %%% "scalajs-dom" % "0.9.1",
-    "com.github.japgolly.scalajs-react" %%% "core" % "0.11.3",
-    "com.github.japgolly.scalajs-react" %%% "extra" % "0.11.3",
+    "com.github.japgolly.scalajs-react" %%% "core" % "1.0.0",
+    "com.github.japgolly.scalajs-react" %%% "extra" % "1.0.0",
     "org.scalaz" %% "scalaz-core" % "7.2.8",
-    "io.suzaku" %%% "diode" % "1.1.1",
-    "io.suzaku" % "diode-react_sjs0.6_2.11" % "1.1.1",
+    "io.suzaku" %%% "diode" % "1.1.2",
+    "io.suzaku" % "diode-react_sjs0.6_2.11" % "1.1.2",
     "com.lihaoyi" %%% "upickle" % "0.4.3"
   ),
   jsDependencies ++=Seq(
@@ -51,8 +48,8 @@ lazy val shared = (crossProject.crossType(CrossType.Pure) in file("shared")).
   settings(
     scalaVersion := scalaV,
     libraryDependencies ++= Seq(
-      "io.suzaku" %%% "diode" % "1.1.1",
-      "io.suzaku" % "diode-react_sjs0.6_2.11" % "1.1.1"
+      "io.suzaku" %%% "diode" % "1.1.2",
+      "io.suzaku" % "diode-react_sjs0.6_2.11" % "1.1.2"
     )
   ).
   jsConfigure(_ enablePlugins ScalaJSWeb)

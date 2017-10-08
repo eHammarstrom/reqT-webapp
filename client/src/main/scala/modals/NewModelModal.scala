@@ -1,15 +1,15 @@
 package modals
 
 import main.AppCircuit
-import japgolly.scalajs.react.vdom.prefix_<^.{<, ^, _}
-import japgolly.scalajs.react.{BackendScope, Callback, ReactComponentB, ReactKeyboardEventI, _}
+import japgolly.scalajs.react.vdom.html_<^.{<, ^, _}
+import japgolly.scalajs.react.{BackendScope, Callback, ScalaComponent, ReactKeyboardEventFromInput, _}
 import org.scalajs.dom.ext.KeyCode
 
 /**
   * Created by johan on 5/17/17.
   */
 object NewModelModal {
-  def modalStyle = Seq(
+  val modalStyle: TagMod = Seq(
     ^.width := "400px",
     ^.padding := "5px",
     ^.position := "absolute",
@@ -25,9 +25,9 @@ object NewModelModal {
     ^.paddingTop := "15px",
     ^.paddingLeft := "15px",
     ^.boxShadow := "rgba(0, 0, 0, 0.2) 5px 6px 12px 0px"
-  )
+  ).toTagMod
 
-  def backdropStyle = Seq(
+  val backdropStyle: TagMod = Seq(
     ^.position := "absolute",
     ^.width := "100%",
     ^.height := "100%",
@@ -36,16 +36,16 @@ object NewModelModal {
     ^.zIndex := "9998",
     ^.background := "#CCC",
     ^.opacity := "0.5"
-  )
+  ).toTagMod
 
-  def buttonStyle = Seq(
+  val buttonStyle: TagMod = Seq(
     ^.width := "95%",
     ^.padding := "20px",
     ^.display.flex,
     ^.justifyContent.spaceBetween
-  )
+  ).toTagMod
 
-  def textAreaStyle = Seq(
+  val textAreaStyle: TagMod = Seq(
     ^.className := "form-control",
     ^.rows := 6,
     ^.maxWidth := "100%",
@@ -53,9 +53,9 @@ object NewModelModal {
     ^.border := "1px solid #CCC",
     ^.borderRadius := "5px",
     ^.background := "#FFF",
-    ^.autoFocus := "true",
-    ^.readOnly := "true"
-  )
+    ^.autoFocus := true,
+    ^.readOnly := true
+  ).toTagMod
 
   case class Props(isOpen: Boolean, onClose: Callback, saveModel: (String, shared.Tree) => Callback, tree: shared.Tree, modalType: String)
 
@@ -120,7 +120,7 @@ object NewModelModal {
             "Specify name of the new model"
           ),
           <.input(
-            ^.autoFocus := "true",
+            ^.autoFocus := true,
             ^.`type` := "text",
             ^.className := "form-control",
             ^.placeholder := "Enter name",
@@ -128,9 +128,9 @@ object NewModelModal {
             ^.onChange ==> onChange
           )
         )
-      )
+      ).toTagMod
 
-    def onChange(e: ReactEventI): Callback = {
+    def onChange(e: ReactEventFromInput): Callback = {
       val newName = e.target.value
       $.modState(_.copy(newModelName = newName))
     }
@@ -141,7 +141,7 @@ object NewModelModal {
 
     def onClose(P: Props): Callback = P.onClose >> resetState
 
-    def handleKeyDown(P: Props, S: State)(e: ReactKeyboardEventI): Callback = {
+    def handleKeyDown(P: Props, S: State)(e: ReactKeyboardEventFromInput): Callback = {
       if (e.nativeEvent.keyCode == KeyCode.Escape)
         onClose(P)
       else if (e.nativeEvent.keyCode == KeyCode.Enter)
@@ -151,12 +151,13 @@ object NewModelModal {
     }
   }
 
-  val component = ReactComponentB[Props]("Modal")
+  val component = ScalaComponent.builder[Props]("Modal")
     .initialState(State(""))
     .renderBackend[Backend]
     .build
 
 
-  def apply(isOpen: Boolean, onClose: Callback, saveModel: (String, shared.Tree) => Callback, tree: shared.Tree, modalType: String)
-  = component.set()(Props(isOpen, onClose, saveModel, tree, modalType))
+  def apply(isOpen: Boolean, onClose: Callback, saveModel: (String, shared.Tree) => Callback, tree: shared.Tree, modalType: String) =
+    component(Props(isOpen, onClose, saveModel, tree, modalType))
+
 }

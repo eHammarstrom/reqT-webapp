@@ -2,8 +2,8 @@ package modals
 
 import diode.Action
 import main.TreeItem
-import japgolly.scalajs.react.vdom.prefix_<^.{<, ^, _}
-import japgolly.scalajs.react.{BackendScope, Callback, ReactComponentB, _}
+import japgolly.scalajs.react.vdom.html_<^.{<, ^, _}
+import japgolly.scalajs.react.{BackendScope, Callback, ScalaComponent, _}
 import org.scalajs.dom.ext.KeyCode
 import selects.{AttributeSelect, EntitySelect, RelationSelect}
 import shared._
@@ -11,7 +11,7 @@ import shared._
 
 object EditModal {
 
-  def modalStyle = Seq(
+  val modalStyle: TagMod = Seq(
     ^.width := "80%",
     ^.minWidth := "400px",
     ^.padding := "5px",
@@ -28,9 +28,9 @@ object EditModal {
     ^.paddingTop := "15px",
     ^.paddingLeft := "15px",
     ^.boxShadow := "rgba(0, 0, 0, 0.2) 5px 6px 12px 0px"
-  )
+  ).toTagMod
 
-  def backdropStyle = Seq(
+  val backdropStyle: TagMod = Seq(
     ^.position := "absolute",
     ^.width := "100%",
     ^.height := "100%",
@@ -39,20 +39,20 @@ object EditModal {
     ^.zIndex := "9998",
     ^.background := "#CCC",
     ^.opacity := "0.5"
-  )
+  ).toTagMod
 
-  def intInputStyle = Seq(
+  val intInputStyle: TagMod = Seq(
     ^.className := "form-control",
     ^.width := "60%",
     ^.whiteSpace := "pre-line",
     ^.borderRadius := "5px",
     ^.marginTop := "-18px",
-    ^.autoFocus := "true",
+    ^.autoFocus := true,
     ^.maxLength := "9",
     ^.placeholder := "Number"
-  )
+  ).toTagMod
 
-  def textAreaStyle = Seq(
+  val textAreaStyle: TagMod = Seq(
     ^.className := "form-control",
     ^.width := "95%",
     ^.maxWidth := "95%",
@@ -60,15 +60,15 @@ object EditModal {
     ^.maxHeight := "200px",
     ^.border := "1px solid #CCC",
     ^.borderRadius := "5px",
-    ^.autoFocus := "true"
-  )
+    ^.autoFocus := true
+  ).toTagMod
 
-  def buttonAreaStyle = Seq(
+  val buttonAreaStyle: TagMod = Seq(
     ^.width := "95%",
     ^.padding := "20px",
     ^.display.flex,
     ^.justifyContent.spaceBetween
-  )
+  ).toTagMod
 
   case class State(input: String, newEntity: Option[Entity] = None, newRelation: Option[RelationType] = None, newAttribute: Option[Attribute] = None)
 
@@ -92,12 +92,12 @@ object EditModal {
         <.div()
 
 
-    def inputChanged(e: ReactEventI): Callback = {
+    def inputChanged(e: ReactEventFromInput): Callback = {
       val newInput = e.target.value
       $.modState(_.copy(input = newInput))
     }
 
-    def intInputChanged(e: ReactEventI): Callback = {
+    def intInputChanged(e: ReactEventFromInput): Callback = {
       val newInput = e.target.value
       $.modState(_.copy(input = newInput.replaceAll("[^\\d]", "")))
     }
@@ -127,7 +127,7 @@ object EditModal {
       }
     }
 
-    def handleKeyDown(P: Props, S: State)(e: ReactKeyboardEventI): Callback = {
+    def handleKeyDown(P: Props, S: State)(e: ReactKeyboardEventFromInput): Callback = {
       if (e.nativeEvent.keyCode == KeyCode.Escape) {
         P.onClose
       } else if (e.nativeEvent.keyCode == KeyCode.Enter && !e.shiftKey) {
@@ -137,7 +137,7 @@ object EditModal {
       }
     }
 
-    def editModalStyle(P: Props, S: State) = Seq(
+    def editModalStyle(P: Props, S: State): TagMod = Seq(
       <.h4(
         "Edit element",
         ^.textAlign.center
@@ -170,14 +170,14 @@ object EditModal {
             <.textarea(
               textAreaStyle,
               ^.rows := {
-                if (S.input.length < 28) "2" else "4"
+                if (S.input.length < 28) 2 else 4
               },
               ^.value := S.input,
               ^.onChange ==> inputChanged
             )
           }
         ),
-        P.treeItem.children.nonEmpty ?= <.hr,
+        <.hr.when(P.treeItem.children.nonEmpty),
         <.dt(
           ^.textAlign := "center",
           ^.color := "#FF3636",
@@ -190,12 +190,12 @@ object EditModal {
         ),
         <.dd(
         ),
-        P.treeItem.children.nonEmpty ?= <.hr,
+        <.hr.when(P.treeItem.children.nonEmpty),
         <.div(
           ^.maxHeight := "300px",
           ^.overflowY := "auto",
           P.treeItem.children.map(x => {
-            Seq(
+            (Seq(
               <.dt(
                 x.nodeToString.replaceAll("TreeItem", ""),
                 ^.textAlign := "center",
@@ -210,8 +210,8 @@ object EditModal {
                 x.contentToString
               ),
               <.br
-            )
-          })
+            ): Seq[TagMod]).toTagMod
+          }).toTagMod
         )
       ),
       <.div(
@@ -219,7 +219,7 @@ object EditModal {
         <.button("Cancel", ^.className := "btn btn-default pull-right", ^.bottom := "0px", ^.onClick --> P.onClose),
         <.button("Save Changes", ^.className := "btn btn-success pull-right", ^.disabled := S.input.isEmpty, ^.bottom := "0px", ^.onClick --> onSave(P, S))
       )
-    )
+    ).toTagMod
 
 
     def initStates(newProps: Props): Callback = {
@@ -247,12 +247,12 @@ object EditModal {
   }
 
 
-  val component = ReactComponentB[Props]("Modal")
+  val component = ScalaComponent.builder[Props]("Modal")
     .initialState(State(""))
     .renderBackend[Backend]
-    .componentWillReceiveProps(i => i.$.backend.initStates(i.nextProps))
+    .componentWillReceiveProps(i => i.backend.initStates(i.nextProps))
     .build
 
   def apply(isOpen: Boolean, onClose: Callback, treeItem: TreeItem, dispatch: (Action => Callback), path: Seq[String])
-  = component.set()(Props(isOpen, onClose, treeItem, dispatch, path))
+  = component(Props(isOpen, onClose, treeItem, dispatch, path))
 }

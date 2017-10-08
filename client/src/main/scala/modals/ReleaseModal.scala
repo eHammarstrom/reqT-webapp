@@ -1,7 +1,7 @@
 package modals
 
-import japgolly.scalajs.react.vdom.prefix_<^.{<, ^, _}
-import japgolly.scalajs.react.{BackendScope, Callback, ReactComponentB, ReactEventI, ReactKeyboardEventI, _}
+import japgolly.scalajs.react.vdom.html_<^.{<, ^, _}
+import japgolly.scalajs.react.{BackendScope, Callback, ScalaComponent, ReactEventFromInput, ReactKeyboardEventFromInput, _}
 import org.scalajs.dom.ext.KeyCode
 import selects.AttributeSelect
 import shared._
@@ -9,7 +9,7 @@ import shared._
 
 object ReleaseModal {
 
-  def modalStyle = Seq(
+  val modalStyle: TagMod = Seq(
     ^.width := "400px",
     ^.padding := "5px",
     ^.position := "absolute",
@@ -25,9 +25,9 @@ object ReleaseModal {
     ^.paddingTop := "15px",
     ^.paddingLeft := "15px",
     ^.boxShadow := "rgba(0, 0, 0, 0.2) 5px 6px 12px 0px"
-  )
+  ).toTagMod
 
-  def backdropStyle = Seq(
+  val backdropStyle: TagMod = Seq(
     ^.position := "absolute",
     ^.width := "100%",
     ^.height := "100%",
@@ -36,9 +36,9 @@ object ReleaseModal {
     ^.zIndex := "9998",
     ^.background := "#CCC",
     ^.opacity := "0.5"
-  )
+  ).toTagMod
 
-  def selectStyle() = Seq(
+  val selectStyle: TagMod = Seq(
     ^.className := "form-control pull-right",
     ^.width := "155px",
     ^.height := "100%",
@@ -46,7 +46,7 @@ object ReleaseModal {
     ^.background := "white",
     ^.textAlign.center,
     ^.textAlignLast.center
-  )
+  ).toTagMod
 
   sealed trait ReleaseType
 
@@ -77,7 +77,7 @@ object ReleaseModal {
               ),
               <.dd(
                 <.select(
-                  selectStyle(),
+                  selectStyle,
                   ^.onChange ==> changeType(S)
                 )(
                   <.option("Max"),
@@ -105,7 +105,7 @@ object ReleaseModal {
               ^.display.flex,
               ^.justifyContent.spaceBetween,
               <.button("Cancel", ^.className := "btn btn-default pull-right", ^.bottom := "0px", ^.onClick --> onClose(P)),
-              <.button("OK", ^.className := "btn btn-success pull-right", ^.autoFocus := "true", ^.bottom := "0px", ^.onClick --> sendMethod(P, S))
+              <.button("OK", ^.className := "btn btn-success pull-right", ^.autoFocus := true, ^.bottom := "0px", ^.onClick --> sendMethod(P, S))
             )),
           <.div(
             backdropStyle,
@@ -116,14 +116,14 @@ object ReleaseModal {
         <.div()
 
 
-    val entitySelect = ReactComponentB[Props]("entitySelect")
+    val entitySelect = ScalaComponent.builder[Props]("entitySelect")
       .render($ =>
         <.select(
-          selectStyle(),
+          selectStyle,
           ^.defaultValue := getDefaultValue($.props.currentModel.children).replaceAll("\"", ""),
           ^.onChange ==> changeEntity
         )(
-          createOptions($.props)
+          createOptions($.props).toTagMod
         )
       )
       .build
@@ -146,13 +146,13 @@ object ReleaseModal {
       }
     }
 
-    def changeEntity(e: ReactEventI): Callback = {
+    def changeEntity(e: ReactEventFromInput): Callback = {
       val choosenEntity = e.target.value
       $.modState(_.copy(newEntity = choosenEntity))
     }
 
 
-    def changeType(S: State)(e: ReactEventI): Callback =
+    def changeType(S: State)(e: ReactEventFromInput): Callback =
       $.modState(_.copy(releaseType = S.releaseType match {
         case MAX => MIN
         case MIN => MAX
@@ -188,7 +188,7 @@ object ReleaseModal {
 
     def onClose(P: Props): Callback = P.onClose() >> resetState
 
-    def handleKeyDown(P: Props, S: State)(e: ReactKeyboardEventI): Callback = {
+    def handleKeyDown(P: Props, S: State)(e: ReactKeyboardEventFromInput): Callback = {
       if (e.nativeEvent.keyCode == KeyCode.Escape) {
         onClose(P)
       } else
@@ -197,13 +197,13 @@ object ReleaseModal {
   }
 
 
-  val component = ReactComponentB[Props]("Modal")
+  val component = ScalaComponent.builder[Props]("Modal")
     .initialState(State("", None))
     .renderBackend[Backend]
     .build
 
 
   def apply(isOpen: Boolean, onClose: () => Callback, sendMethod: Seq[String] => Callback, currentModel: Tree)
-  = component.set()(Props(isOpen, onClose, sendMethod, currentModel))
+  = component(Props(isOpen, onClose, sendMethod, currentModel))
 
 }

@@ -1,7 +1,7 @@
 package selects
 
-import japgolly.scalajs.react.vdom.prefix_<^.{<, _}
-import japgolly.scalajs.react.{BackendScope, Callback, ReactComponentB, _}
+import japgolly.scalajs.react.vdom.html_<^.{<, _}
+import japgolly.scalajs.react.{BackendScope, Callback, ScalaComponent, _}
 import shared._
 
 object EntitySelect {
@@ -34,30 +34,30 @@ object EntitySelect {
   class Backend($: BackendScope[Props, State]) {
     def render(P: Props, S: State) =
       <.select(
-        selectStyle(P),
+        selectStyle(P).toTagMod,
         ^.value := {
           if (S.value.isEmpty) P.value else S.value
         },
         ^.onChange ==> onChange(P, S)
       )(
-        entityList.map(x => <.option(^.font := "bold", x))
+        entityList.map(x => <.option(^.font := "bold", x)).toTagMod
       )
 
-
-    def onChange(P: Props, S: State)(e: ReactEventI): Callback = {
+    def onChange(P: Props, S: State)(e: ReactEventFromInput): Callback = {
       e.preventDefault()
       val newEntity = e.target.value
-      P.setNewEntity(Some(Entity(newEntity))) >> $.setState(s = S.copy(value = newEntity))
+      P.setNewEntity(Some(Entity(newEntity))) >> $.setState(S.copy(value = newEntity))
     }
   }
 
 
-  val component = ReactComponentB[Props]("EntitySelect")
+  val component = ScalaComponent.builder[Props]("EntitySelect")
     .initialState(State(value = ""))
     .renderBackend[Backend]
     .build
 
 
-  def apply(value: String, setNewEntity: Option[Entity] => Callback, isModelValue: Boolean) = component.set()(Props(value, setNewEntity, isModelValue))
+  def apply(value: String, setNewEntity: Option[Entity] => Callback, isModelValue: Boolean) =
+    component(Props(value, setNewEntity, isModelValue))()
 
 }

@@ -1,9 +1,9 @@
 package main
 
 import diode.react.ModelProxy
-import japgolly.scalajs.react.{BackendScope, Callback, ReactComponentB, ReactEvent, ReactEventI}
+import japgolly.scalajs.react.{BackendScope, Callback, ScalaComponent, ReactEvent, ReactEventFromInput}
 import shared._
-import japgolly.scalajs.react.vdom.prefix_<^.{<, ^, _}
+import japgolly.scalajs.react.vdom.html_<^.{<, ^, _}
 import modals._
 import org.scalajs.dom.ext.Ajax
 import org.scalajs.dom.raw.{Blob, BlobPropertyBag, FileReader, UIEvent}
@@ -75,70 +75,80 @@ object Header {
       )
     }
 
-    val navigationBar = ReactComponentB[(Props, State)]("navigationBar")
+    val navigationBar = ScalaComponent.builder[(Props, State)]("navigationBar")
       .render($ => <.nav(
-        headerBarStyle,
-        headerButtons.map(x => buttonComponent((x, $.props._1, $.props._2)))
+        headerBarStyle.toTagMod,
+        headerButtons.map(x => buttonComponent((x, $.props._1, $.props._2))).toTagMod
       )
       ).build
 
 
-    val buttonComponent = ReactComponentB[(String, Props, State)]("buttonComponent")
-      .render($ =>
-        $.props._1 match {
-          case "Import" => <.label(
-            headerButtonStyle,
-            "Import",
-            <.input(
-              ^.`type` := "file",
-              ^.display.none,
-              ^.accept := "text/plain, text/x-scala, .txt, .scala",
-              ^.onChange ==> importModel($.props._2)
-            )
-          )
-          case "Export" =>
-            <.button(
-              headerButtonStyle,
-              "Export",
-              ^.onClick --> Callback(downloadModel($.props._2, $.props._3))
-            )
-          case "Copy Model" =>
-            <.button(
-              headerButtonStyle,
-              "Copy Model",
-              ^.onClick --> openCopyModal
-            )
-          case "Templates" => TemplateSelect($.props._2.openNewModelModal)
-          case "100$" =>
-            <.button(
-              headerButtonStyle,
-              "100$",
-              ^.onClick --> openDollarModal
-            )
-          case "Release" =>
-            <.button(
-              headerButtonStyle,
-              "Release",
-              ^.onClick --> openReleaseModal
-            )
-          case "Ordinal" =>
-            <.button(
-              headerButtonStyle,
-              "Ordinal Ranking",
-              ^.onClick --> openOrdinalModal
-            )
-          case "Help" =>
-            <.button(
-              headerButtonStyle,
-              ^.className := "glyphicon glyphicon-question-sign pull-right",
-              ^.onClick --> openHelpModal
-            )
-          case _ => <.button(
-            $.props._1,
-            headerButtonStyle,
-            ^.onClick --> Callback()
-          )
-        }).build
+    val buttonComponent = ScalaComponent.builder[(String, Props, State)]("buttonComponent")
+        .render($ => {
+          val str = $.props._1
+          val P = $.props._2
+          val S = $.props._3
+
+          str match {
+            case "Import" =>
+              <.label(
+                headerButtonStyle.toTagMod,
+                "Import",
+                <.input(
+                  ^.`type` := "file",
+                  ^.display.none,
+                  ^.accept := "text/plain, text/x-scala, .txt, .scala",
+                  ^.onChange ==> importModel(P)
+                )
+              )
+            case "Export" =>
+              <.button(
+                headerButtonStyle.toTagMod,
+                "Export",
+                ^.onClick --> Callback(downloadModel(P, S))
+              )
+            case "Copy Model" =>
+              <.button(
+                headerButtonStyle.toTagMod,
+                "Copy Model",
+                ^.onClick --> openCopyModal
+              )
+            case "Templates" =>
+              TemplateSelect(P.openNewModelModal)
+            case "100$" =>
+              <.button(
+                headerButtonStyle.toTagMod,
+                "100$",
+                ^.onClick --> openDollarModal
+              )
+            case "Release" =>
+              <.button(
+                headerButtonStyle.toTagMod,
+                "Release",
+                ^.onClick --> openReleaseModal
+              )
+            case "Ordinal" =>
+              <.button(
+                headerButtonStyle.toTagMod,
+                "Ordinal Ranking",
+                ^.onClick --> openOrdinalModal
+              )
+            case "Help" =>
+              <.button(
+                headerButtonStyle.toTagMod,
+                ^.className := "glyphicon glyphicon-question-sign pull-right",
+                ^.onClick --> openHelpModal
+              )
+            case _ =>
+              <.button(
+                str,
+                headerButtonStyle.toTagMod,
+                ^.onClick --> Callback()
+              )
+          }
+        }
+      )
+      .build
 
     def parseModel(newModel: String, P: Props): Callback = {
       val getModelEndpoint = "/parsemodel"
@@ -152,7 +162,7 @@ object Header {
       Callback() // FIXME: Handle Ajax.post.failed
     }
 
-    def importModel(P: Props)(e: ReactEventI): Callback = {
+    def importModel(P: Props)(e: ReactEventFromInput): Callback = {
       val ftype = e.currentTarget.files.item(0).`type`
       if (ftype == "text/plain" || ftype == "text/x-scala") {
         var newModel = "newModel empty, shouldn't happen"
@@ -194,13 +204,13 @@ object Header {
 
   }
 
-  val component = ReactComponentB[Props]("Modal")
+  val component = ScalaComponent.builder[Props]("Modal")
     .initialState(State())
     .renderBackend[Backend]
     .build
 
 
   def apply(modelProxy: ModelProxy[Tree], openNewModelModal: (String, Tree) => Callback, sendMethod: Seq[String] => Callback, getCurrentModelName: Option[webApp.CachedModel])
-  = component.set()(Props(modelProxy, openNewModelModal, sendMethod, getCurrentModelName))
+  = component(Props(modelProxy, openNewModelModal, sendMethod, getCurrentModelName))
 
 }

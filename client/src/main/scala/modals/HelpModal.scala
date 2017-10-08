@@ -1,13 +1,13 @@
 package modals
 
-import japgolly.scalajs.react.vdom.prefix_<^.{<, ^, _}
-import japgolly.scalajs.react.{BackendScope, Callback, ReactComponentB, ReactKeyboardEventI, _}
+import japgolly.scalajs.react.vdom.html_<^.{<, ^, _}
+import japgolly.scalajs.react.{BackendScope, Callback, ScalaComponent, ReactKeyboardEventFromInput, _}
 import org.scalajs.dom.ext.KeyCode
 
 
 object HelpModal {
 
-  val textAreaStyle = Seq(
+  val textAreaStyle: TagMod = Seq(
     ^.className := "form-control",
     ^.rows := 6,
     ^.maxWidth := "100%",
@@ -15,18 +15,18 @@ object HelpModal {
     ^.border := "1px solid #CCC",
     ^.borderRadius := "5px",
     ^.background := "#FFF",
-    ^.autoFocus := "true",
-    ^.readOnly := "true",
-    ^.selected := "true"
-  )
+    ^.autoFocus := true,
+    ^.readOnly := true,
+    ^.selected := true
+  ).toTagMod
 
-  val buttonAreaStyle = Seq(
+  val buttonAreaStyle: TagMod = Seq(
     ^.padding := "5px",
     ^.display.flex,
     ^.justifyContent.spaceBetween
-  )
+  ).toTagMod
 
-  val modalStyle = Seq(
+  val modalStyle: TagMod = Seq(
     ^.width := "400px",
     ^.padding := "5px",
     ^.position := "absolute",
@@ -42,9 +42,9 @@ object HelpModal {
     ^.paddingTop := "15px",
     ^.paddingLeft := "15px",
     ^.boxShadow := "rgba(0, 0, 0, 0.2) 5px 6px 12px 0px"
-  )
+  ).toTagMod
 
-  val backdropStyle = Seq(
+  val backdropStyle: TagMod = Seq(
     ^.position := "absolute",
     ^.width := "100%",
     ^.height := "100%",
@@ -53,7 +53,7 @@ object HelpModal {
     ^.zIndex := "9998",
     ^.background := "#CCC",
     ^.opacity := "0.5"
-  )
+  ).toTagMod
 
   case class State()
 
@@ -63,7 +63,7 @@ object HelpModal {
 
     def onClose(P: Props): Callback = P.onClose()
 
-    def handleKeyDown(P: Props)(e: ReactKeyboardEventI): Callback = {
+    def handleKeyDown(P: Props)(e: ReactKeyboardEventFromInput): Callback = {
       if (e.nativeEvent.keyCode == KeyCode.Escape) {
         onClose(P)
       }
@@ -87,7 +87,7 @@ object HelpModal {
     }
 
 
-    val copyModal = ReactComponentB[Props]("copyModal")
+    val copyModal = ScalaComponent.builder[Props]("copyModal")
       .render($ =>
         <.div(
           modalStyle,
@@ -128,12 +128,12 @@ object HelpModal {
   }
 
 
-  val component = ReactComponentB[Props]("Modal")
+  val component = ScalaComponent.builder[Props]("Modal")
     .initialState(State())
     .renderBackend[Backend]
     .build
 
 
-  def apply(isOpen: Boolean, onClose: () => Callback) = component.set()(Props(isOpen, onClose))
+  def apply(isOpen: Boolean, onClose: () => Callback) = component(Props(isOpen, onClose))
 
 }

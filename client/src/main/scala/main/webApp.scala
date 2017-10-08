@@ -5,53 +5,54 @@ import org.scalajs.dom
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExport
-import japgolly.scalajs.react.vdom.prefix_<^.{<, _}
+import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react._
 import diode.react.ModelProxy
+import japgolly.scalajs.react.raw.ReactElement
 import modals.NewModelModal
 
 import scalacss.ScalaCssReact._
-import scalacss.Defaults._
+import scalacss.ProdDefaults._
 import scala.collection.immutable.Queue
 import shared._
 
 @JSExport
 object webApp extends js.JSApp {
 
-  val contentDivStyle = Seq(
+  val contentDivStyle: TagMod = Seq(
     ^.className := "container",
     ^.width := "100%",
     ^.height := "100%",
     ^.overflow.hidden,
     ^.paddingRight := "5px",
     ^.paddingLeft := "5px"
-  )
+  ).toTagMod
 
-  val ListTerminalDivStyle = Seq(
+  val ListTerminalDivStyle: TagMod = Seq(
     ^.className := "col-1",
     ^.float.left,
     ^.width := "29%",
     ^.height := "100%",
     ^.paddingRight := "9px"
-  )
+  ).toTagMod
 
-  val cachedModelsDivStyle = Seq(
+  val cachedModelsDivStyle: TagMod = Seq(
     ^.className := "col-2",
     ^.width := "71%",
     ^.height := "100%",
     ^.float.left
-  )
+  ).toTagMod
 
-  val cachedModelsPreStyle = Seq(
+  val cachedModelsPreStyle: TagMod = Seq(
     ^.padding := "5px",
     ^.paddingRight := "5px",
     ^.height := "5%",
     ^.minHeight := "40px",
     ^.overflow.hidden,
     ^.position.relative
-  )
+  ).toTagMod
 
-  val addCachedModelsButtonStyle = Seq(
+  val addCachedModelsButtonStyle: TagMod = Seq(
     ^.className := "glyphicon glyphicon-plus",
     ^.color := "green",
     ^.position.absolute,
@@ -61,9 +62,9 @@ object webApp extends js.JSApp {
     ^.marginLeft := "-6px",
     ^.marginTop := "-2px",
     ^.outline := "none"
-  )
+  ).toTagMod
 
-  val cachedModelsDiv1Style = Seq(
+  val cachedModelsDiv1Style: TagMod = Seq(
     ^.overflowX.auto,
     ^.left := "5%",
     ^.height := "91%",
@@ -71,9 +72,9 @@ object webApp extends js.JSApp {
     ^.overflowY.hidden,
     ^.width := "95%",
     ^.position.absolute
-  )
+  ).toTagMod
 
-  val modelTabsStyle = Seq(
+  val modelTabsStyle: TagMod = Seq(
     ^.className := "navpill",
     ^.display.flex,
     ^.flexDirection.row,
@@ -88,9 +89,9 @@ object webApp extends js.JSApp {
     ^.top := "0px",
     ^.width := "200px",
     ^.background := "#CFEADD"
-  )
+  ).toTagMod
 
-  val modelTabsSpanStyle = Seq(
+  val modelTabsSpanStyle: TagMod = Seq(
     ^.className := "col",
     ^.width := "80%",
     ^.height := "100%",
@@ -101,9 +102,9 @@ object webApp extends js.JSApp {
     ^.alignSelf.center,
     ^.alignItems.center,
     ^.fontSize.medium
-  )
+  ).toTagMod
 
-  val modelTabsButtonStyle = Seq(
+  val modelTabsButtonStyle: TagMod = Seq(
     ^.className := "col",
     ^.position.absolute,
     ^.width := "20%",
@@ -111,14 +112,14 @@ object webApp extends js.JSApp {
     ^.left := "80%",
     ^.top := "0%",
     ^.paddingTop := "5px"
-  )
+  ).toTagMod
 
-  val cachedModelsRowStyle = Seq(
+  val cachedModelsRowStyle: TagMod = Seq(
     ^.whiteSpace.nowrap,
     ^.position.absolute,
     ^.height := "100%",
     ^.className := "clickable-row"
-  )
+  ).toTagMod
 
   case class Props(proxy: ModelProxy[Tree])
 
@@ -142,8 +143,8 @@ object webApp extends js.JSApp {
 
   class Backend($: BackendScope[Props, State]) {
 
-    def saveScrollPosition(position: Double): Callback = {
-      if ($.accessDirect.state.scrollPosition != position)
+    def saveScrollPosition(S: State, position: Double): Callback = {
+      if (S.scrollPosition != position)
         $.modState(_.copy(scrollPosition = position))
       else
         Callback()
@@ -155,8 +156,8 @@ object webApp extends js.JSApp {
       saveModelType = newSaveModelType, newModel = newModel))
 
 
-    val treeView = ReactComponentB[ModelProxy[Tree]]("treeView")
-      .render(P => <.pre(
+    val treeView = ScalaComponent.builder[(ModelProxy[Tree], State)]("treeView")
+      .render($ => <.pre(
         ^.className := "zoomViewport",
         GlobalStyle.treeView,
         ^.border := "1px solid #ccc",
@@ -165,10 +166,9 @@ object webApp extends js.JSApp {
           ^.width := "100%",
           ^.height := "100%",
           ReactTreeView(
-            root = elemToTreeItem(P.props.value.children),
-            modelProxy = P.props,
-            showSearchBox = false,
-            saveScrollPosition = saveScrollPosition
+            root = elemToTreeItem($.props._1.value.children),
+            modelProxy = $.props._1,
+            saveScrollPosition = saveScrollPosition($.props._2, _)
           ),
           <.strong(
             ^.id := "treeviewcontent"
@@ -202,7 +202,7 @@ object webApp extends js.JSApp {
           onClose = closeNewModelModal,
           saveModel = saveModel(_, _, P, S),
           S.newModel, S.saveModelType
-        ),
+        )(),
         contentDivStyle,
         <.div(
           ^.className := "header",
@@ -215,13 +215,13 @@ object webApp extends js.JSApp {
         ),
         <.div(
           cachedModelsDivStyle,
-          cachedModels((P, S)),
-          sc(proxy => treeView(proxy))
+          cachedModels((P, S))(),
+          sc((proxy: ModelProxy[Tree]) => treeView((proxy, S)))()
         )
       )
     }
 
-    val cachedModels = ReactComponentB[(Props, State)]("cachedModelsComponent")
+    val cachedModels = ScalaComponent.builder[(Props, State)]("cachedModelsComponent")
       .render($ => <.pre(
         cachedModelsPreStyle,
         <.button(
@@ -238,14 +238,14 @@ object webApp extends js.JSApp {
               ^.paddingBottom := "5px",
               ^.className := "nav nav-pills",
               ^.listStyleType.none,
-              $.props._2.cachedModels.map(s => listModels((s, $.props._1, $.props._2)))
+              $.props._2.cachedModels.map(s => listModels((s, $.props._1, $.props._2))).toTagMod
             )
           )
         )
       )
       ).build
 
-    val listModels = ReactComponentB[(CachedModel, Props, State)]("listElem")
+    val listModels = ScalaComponent.builder[(CachedModel, Props, State)]("listElem")
       .render($ => <.li(
         modelTabsStyle,
         ^.opacity := {
@@ -268,7 +268,7 @@ object webApp extends js.JSApp {
         )
       )).build
 
-    def getActiveModelName: Option[CachedModel] = $.accessDirect.state.cachedModels.find(_.selected)
+    def getActiveModelName: Option[CachedModel] = $.state.runNow().cachedModels.find(_.selected)
 
     def setActiveModel(cachedModel: CachedModel, P: Props, S: State): Callback = {
       updateActiveModel(cachedModel, P, S) >> P.proxy.dispatchCB(SetModel(cachedModel.model.children))
@@ -284,7 +284,7 @@ object webApp extends js.JSApp {
       $.modState(_.copy(cachedModels = newModels))
     }
 
-    def removeCachedModel(modelToRemove: CachedModel, P: Props, S: State)(e: ReactEventI): Callback = {
+    def removeCachedModel(modelToRemove: CachedModel, P: Props, S: State)(e: ReactEventFromInput): Callback = {
       e.stopPropagation()
       val index = S.cachedModels.indexWhere(_.equals(modelToRemove))
       val beginning = S.cachedModels.take(index)
@@ -318,13 +318,12 @@ object webApp extends js.JSApp {
     }
   }
 
-  val pageContent = ReactComponentB[Props]("Content")
+  val pageContent = ScalaComponent.builder[Props]("Content")
     .initialState(State())
     .renderBackend[Backend]
-    .componentWillReceiveProps(x => x.$.backend.setScroll(x.currentState.scrollPosition))
-    .componentDidUpdate(x => {
-      x.$.backend.setScroll(x.currentState.scrollPosition)
-    })
+    .componentWillReceiveProps(x => x.backend.setScroll(x.state.scrollPosition)) // Was currentState
+    .componentDidUpdate(x =>
+      x.backend.setScroll(x.currentState.scrollPosition))
     .build
 
 
@@ -333,6 +332,6 @@ object webApp extends js.JSApp {
   def main(): Unit = {
     AppCss.load
     window.onbeforeunload = {beforeUnloadEvent: BeforeUnloadEvent => "Leave?"}
-    ReactDOM.render(dc(proxy => pageContent(Props(proxy))), document.getElementById("content"))
+    dc(proxy => pageContent.apply(Props(proxy))).renderIntoDOM(document.getElementById("content"))
   }
 }

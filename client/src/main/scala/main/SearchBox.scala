@@ -1,10 +1,10 @@
 package main
 
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.prefix_<^.{^, _}
+import japgolly.scalajs.react.vdom.html_<^.{^, _}
 
 import scala.scalajs.js
-import scalacss.Defaults._
+import scalacss.ProdDefaults._
 import scalacss.ScalaCssReact._
 import shared._
 
@@ -37,7 +37,7 @@ object ReactSearchBox {
   case class Props(onTextChange: String => Callback, style: Style)
 
   class Backend(t: BackendScope[Props, _]) {
-    def onTextChange(P: Props)(e: ReactEventI) =
+    def onTextChange(P: Props)(e: ReactEventFromInput) =
       e.preventDefaultCB >> P.onTextChange(e.target.value)
 
     def render(P: Props) =
@@ -54,13 +54,15 @@ object ReactSearchBox {
 
   object DefaultStyle extends Style
 
-  val component = ReactComponentB[Props]("ReactSearchBox")
+  val component = ScalaComponent.builder[Props]("ReactSearchBox")
     .stateless
     .renderBackend[Backend]
     .build
 
 
-  def apply(onTextChange: String => Callback, style: Style = DefaultStyle, ref: js.UndefOr[String] = "", key: js.Any = {}) = component.set(key, ref)(Props(onTextChange, style))
+  def apply(onTextChange: String => Callback, style: Style = DefaultStyle,
+            ref: js.UndefOr[String] = "", key: js.Any = {}) =
+    component(Props(onTextChange, style))
 
 }
 

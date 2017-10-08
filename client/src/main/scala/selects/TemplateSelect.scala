@@ -1,7 +1,7 @@
 package selects
 
-import japgolly.scalajs.react.vdom.prefix_<^.{<, _}
-import japgolly.scalajs.react.{BackendScope, Callback, ReactComponentB, _}
+import japgolly.scalajs.react.vdom.html_<^.{<, _}
+import japgolly.scalajs.react.{BackendScope, Callback, ScalaComponent, _}
 import org.scalajs.dom.ext.KeyCode
 import shared._
 
@@ -45,25 +45,25 @@ object TemplateSelect {
         "Templates ",
         ^.onClick --> $.modState(_.copy(isOpen = !S.isOpen)),
         <.span(^.className := "caret"),
-        S.isOpen ?= dropdownList(P),
-        S.isOpen ?= <.div(
-          backdropStyle,
+        dropdownList(P).when(S.isOpen),
+        <.div(
+          backdropStyle.toTagMod,
           ^.onClick --> closeDropdown
-        )
+        ).when(S.isOpen)
       )
 
 
-    val dropdownList = ReactComponentB[Props]("dropdownList")
+    val dropdownList = ScalaComponent.builder[Props]("dropdownList")
       .render(P =>
         <.div(
-          contentStyle,
-          templates.map(s => template((P.props, s)))
+          contentStyle.toTagMod,
+          templates.map(s => template((P.props, s))).toTagMod
         )
       )
       .build
 
 
-    val template = ReactComponentB[(Props, String)]("template")
+    val template = ScalaComponent.builder[(Props, String)]("template")
       .render(P =>
         <.div(
           ^.className := "list-group-item",
@@ -73,7 +73,7 @@ object TemplateSelect {
         )
       ).build
 
-    def handleKeyDown(event: ReactKeyboardEventI): Callback = {
+    def handleKeyDown(event: ReactKeyboardEventFromInput): Callback = {
       if (event.nativeEvent.keyCode == KeyCode.Enter) {
         event.preventDefault()
         closeDropdown
@@ -88,7 +88,7 @@ object TemplateSelect {
     def closeDropdown: Callback = $.modState(_.copy(isOpen = false))
 
 
-    def onClick(P: Props)(e: ReactEventI): Callback = {
+    def onClick(P: Props)(e: ReactEventFromInput): Callback = {
       e.preventDefault()
       val template = e.target.textContent.toString
 
@@ -114,12 +114,12 @@ object TemplateSelect {
     }
   }
 
-  val component = ReactComponentB[Props]("TemplateSelect")
+  val component = ScalaComponent.builder[Props]("TemplateSelect")
     .initialState(State())
     .renderBackend[Backend]
     .build
 
-  def apply(openNewModelModal: (String, Tree) => Callback) = component.set()(Props(openNewModelModal))
+  def apply(openNewModelModal: (String, Tree) => Callback) = component(Props(openNewModelModal))
 
 
   val m1 = Vector(Relation(Entity("Goal", "accuracy"), RelationType("has"), Tree(Seq(StringAttribute("Spec", "Our pre-calculations shall hit within 5%")))), Relation(Entity("Feature", "quotation"), RelationType("has"), Tree(Seq(StringAttribute("Spec", "Product shall support cost recording and quotation with experience data")))), Relation(Entity("Function", "experienceData"), RelationType("has"), Tree(Seq(StringAttribute("Spec", "Product shall have recording and retrieval functions for experience data")))), Relation(Entity("Design", "screenX"), RelationType("has"), Tree(Seq(StringAttribute("Spec", "System shall have screen pictures as shown in Fig. X")))))

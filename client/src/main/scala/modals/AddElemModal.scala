@@ -2,8 +2,8 @@ package modals
 
 import diode.Action
 import main.TreeItem
-import japgolly.scalajs.react.vdom.prefix_<^.{<, ^, _}
-import japgolly.scalajs.react.{BackendScope, Callback, ReactComponentB, _}
+import japgolly.scalajs.react.vdom.html_<^.{<, ^, _}
+import japgolly.scalajs.react.{BackendScope, Callback, ScalaComponent, _}
 import org.scalajs.dom.ext.KeyCode
 import selects.RelationSelect
 import shared._
@@ -11,7 +11,7 @@ import shared._
 
 object AddElemModal {
 
-  def modalStyle = Seq(
+  val modalStyle: TagMod = Seq(
     ^.width := "400px",
     ^.padding := "5px",
     ^.position := "absolute",
@@ -27,9 +27,9 @@ object AddElemModal {
     ^.paddingTop := "15px",
     ^.paddingLeft := "15px",
     ^.boxShadow := "rgba(0, 0, 0, 0.2) 5px 6px 12px 0px"
-  )
+  ).toTagMod
 
-  def backdropStyle = Seq(
+  val backdropStyle: TagMod = Seq(
     ^.position := "absolute",
     ^.width := "100%",
     ^.height := "100%",
@@ -38,26 +38,26 @@ object AddElemModal {
     ^.zIndex := "9998",
     ^.background := "#CCC",
     ^.opacity := "0.5"
-  )
+  ).toTagMod
 
-  def buttonAreaStyle = Seq(
+  val buttonAreaStyle: TagMod = Seq(
     ^.width := "95%",
     ^.padding := "20px",
     ^.display.flex,
     ^.justifyContent.spaceBetween
-  )
+  ).toTagMod
 
-  def intInputStyle = Seq(
+  val intInputStyle: TagMod = Seq(
     ^.className := "form-control",
     ^.width := "60%",
     ^.marginTop := "-18px",
     ^.borderRadius := "5px",
-    ^.autoFocus := "true",
+    ^.autoFocus := true,
     ^.maxLength := "9",
     ^.placeholder := "Number"
-  )
+  ).toTagMod
 
-  def textAreaStyle = Seq(
+  val textAreaStyle: TagMod = Seq(
     ^.className := "form-control",
     ^.width := "95%",
     ^.maxWidth := "95%",
@@ -65,8 +65,8 @@ object AddElemModal {
     ^.marginTop := "-18px",
     ^.border := "1px solid #CCC",
     ^.borderRadius := "5px",
-    ^.autoFocus := "true"
-  )
+    ^.autoFocus := true
+  ).toTagMod
 
 
   case class State(input: String, newRelation: Option[RelationType] = None)
@@ -93,12 +93,12 @@ object AddElemModal {
 
     def setNewRelation(relationType: Option[RelationType]): Callback = $.modState(_.copy(newRelation = relationType))
 
-    def inputChanged(e: ReactEventI): Callback = {
+    def inputChanged(e: ReactEventFromInput): Callback = {
       val newInput = e.target.value
       $.modState(_.copy(input = newInput))
     }
 
-    def intInputChanged(e: ReactEventI): Callback = {
+    def intInputChanged(e: ReactEventFromInput): Callback = {
       val newInput = e.target.value
       $.modState(_.copy(input = newInput.replaceAll("[^\\d]", "")))
     }
@@ -120,7 +120,7 @@ object AddElemModal {
       }
     }
 
-    def handleKeyDown(P: Props, S: State)(e: ReactKeyboardEventI): Callback = {
+    def handleKeyDown(P: Props, S: State)(e: ReactKeyboardEventFromInput): Callback = {
       if (e.nativeEvent.keyCode == KeyCode.Escape) {
         P.onClose
       } else if (e.nativeEvent.keyCode == KeyCode.Enter && !e.shiftKey) {
@@ -137,10 +137,9 @@ object AddElemModal {
       ),
       <.dl(
         ^.className := "dl-horizontal",
-        <.br,
-
+        <.br: TagMod,
         if (!P.addToPlaceholder) {
-          Seq(
+          (Seq(
             <.dt(
               ^.textAlign := "center",
               ^.color := {
@@ -161,7 +160,7 @@ object AddElemModal {
             ),
             <.div(
               if (P.treeItem.nodeToString != "Model") {
-                Seq(
+                (Seq(
                   <.hr,
                   <.dt(
                     P.treeItem.link match {
@@ -171,14 +170,14 @@ object AddElemModal {
                     ^.textAlign := "center",
                     ^.color := "#FF3636"
                   )
-                )
+                ): Seq[TagMod]).toTagMod
               } else { "" }
             ),
             <.dd(
 
             ),
             <.hr
-          )
+          ): Seq[TagMod]).toTagMod
         } else {
           ""
         },
@@ -219,17 +218,17 @@ object AddElemModal {
         <.button("Cancel", ^.className := "btn btn-default pull-right", ^.bottom := "0px", ^.onClick --> P.onClose),
         <.button("Add", ^.className := "btn btn-success pull-right", ^.bottom := "0px", ^.disabled := S.input.isEmpty, ^.onClick --> addElem(P, S))
       )
-    )
+    ).toTagMod
 
 
   }
 
 
-  val component = ReactComponentB[Props]("Modal")
+  val component = ScalaComponent.builder[Props]("Modal")
     .initialState(State(""))
     .renderBackend[Backend]
     .build
 
   def apply(isOpen: Boolean, onClose: Callback, treeItem: TreeItem, dispatch: (Action => Callback), path: Seq[String], elemToAdd: Option[Elem], addToPlaceholder: Boolean)
-  = component.set()(Props(isOpen, onClose, treeItem, dispatch, path, elemToAdd, addToPlaceholder))
+  = component(Props(isOpen, onClose, treeItem, dispatch, path, elemToAdd, addToPlaceholder))
 }

@@ -1,14 +1,14 @@
 package modals
 
-import japgolly.scalajs.react.vdom.prefix_<^.{<, ^, _}
-import japgolly.scalajs.react.{BackendScope, Callback, ReactComponentB, ReactKeyboardEventI, _}
+import japgolly.scalajs.react.vdom.html_<^.{<, ^, _}
+import japgolly.scalajs.react.{BackendScope, Callback, ScalaComponent, ReactKeyboardEventFromInput, _}
 import org.scalajs.dom.ext.KeyCode
 import shared._
 
 
 object OrdinalModal {
 
-  def modalStyle = Seq(
+  val modalStyle: TagMod = Seq(
     ^.width := "400px",
     ^.padding := "5px",
     ^.position := "absolute",
@@ -24,9 +24,9 @@ object OrdinalModal {
     ^.paddingTop := "15px",
     ^.paddingLeft := "15px",
     ^.boxShadow := "rgba(0, 0, 0, 0.2) 5px 6px 12px 0px"
-  )
+  ).toTagMod
 
-  def backdropStyle = Seq(
+  val backdropStyle: TagMod = Seq(
     ^.position := "absolute",
     ^.width := "100%",
     ^.height := "100%",
@@ -35,9 +35,9 @@ object OrdinalModal {
     ^.zIndex := "9998",
     ^.background := "#CCC",
     ^.opacity := "0.5"
-  )
+  ).toTagMod
 
-  def selectStyle = Seq(
+  val selectStyle: TagMod = Seq(
     ^.className := "form-control pull-right",
     ^.width := "155px",
     ^.height := "100%",
@@ -46,23 +46,23 @@ object OrdinalModal {
     ^.overflow.hidden,
     ^.textAlign.center,
     ^.textAlignLast.center
-  )
+  ).toTagMod
 
-  def buttonDivStyle = Seq(
+  val buttonDivStyle: TagMod = Seq(
     ^.width := "95%",
     ^.padding := "20px",
     ^.display.flex,
     ^.justifyContent.spaceBetween
-  )
+  ).toTagMod
 
-  def nbrInputStyle = Seq(
+  val nbrInputStyle: TagMod = Seq(
     ^.`type` := "number",
     ^.min := 0,
     ^.max := 99999999,
     ^.className := "form-control",
     ^.width := "60%",
     ^.borderRadius := "5px"
-  )
+  ).toTagMod
 
   case class State(rankings: Seq[Int] = Seq(), pairs: Seq[Seq[Entity]] = Seq(), deviation: Int = 0, typeToRank: String = "", readyForRanking: Boolean = false)
 
@@ -107,7 +107,8 @@ object OrdinalModal {
                 ^.textAlign.center
               ),
               <.div(
-                S.pairs.zipWithIndex.map(pairs => pairSelect(pairProps(S, pair = pairs._1, index = pairs._2, 0)))
+                S.pairs.zipWithIndex.map(
+                  pairs => pairSelect(pairProps(S, pair = pairs._1, index = pairs._2, 0))).toTagMod
               ),
               <.div(
                 "Deviation:",
@@ -119,7 +120,7 @@ object OrdinalModal {
               <.div(
                 buttonDivStyle,
                 <.button("Cancel", ^.className := "btn btn-default pull-right", ^.bottom := "0px", ^.onClick --> onClose(P)),
-                <.button("OK", ^.className := "btn btn-success pull-right", ^.autoFocus := "true", ^.bottom := "0px", ^.onClick --> sendMethod(P, S))
+                <.button("OK", ^.className := "btn btn-success pull-right", ^.autoFocus := true, ^.bottom := "0px", ^.onClick --> sendMethod(P, S))
               )),
             <.div(
               backdropStyle,
@@ -142,7 +143,7 @@ object OrdinalModal {
               <.div(
                 buttonDivStyle,
                 <.button("Cancel", ^.className := "btn btn-default pull-right", ^.bottom := "0px", ^.onClick --> onClose(P)),
-                <.button("Rank", ^.className := "btn btn-success pull-right", ^.autoFocus := "true", ^.bottom := "0px", ^.onClick --> setState(P, S))
+                <.button("Rank", ^.className := "btn btn-success pull-right", ^.autoFocus := true, ^.bottom := "0px", ^.onClick --> setState(P, S))
               )),
             <.div(
               backdropStyle,
@@ -162,7 +163,7 @@ object OrdinalModal {
 
     case class pairProps(state: State, pair: Seq[Entity], index: Int, nbr: Int)
 
-    val pairSelect = ReactComponentB[pairProps]("pairSelect")
+    val pairSelect = ScalaComponent.builder[pairProps]("pairSelect")
       .render($ =>
         <.div(
           ^.className := "btn-group btn-group-justified",
@@ -174,7 +175,7 @@ object OrdinalModal {
       .build
 
 
-    def entityButton = ReactComponentB[pairProps]("entityButton")
+    def entityButton = ScalaComponent.builder[pairProps]("entityButton")
       .render($ =>
         <.div(
           ^.className := "btn-group",
@@ -196,13 +197,13 @@ object OrdinalModal {
       )
       .build
 
-    val entitySelect = ReactComponentB[Props]("entitySelect")
+    val entitySelect = ScalaComponent.builder[Props]("entitySelect")
       .render($ =>
         <.select(
           selectStyle,
           ^.onChange ==> setTypeToRank
         )(
-          createOptions($.props)
+          createOptions($.props).toTagMod
         )
       )
       .build
@@ -217,12 +218,12 @@ object OrdinalModal {
 
     def tell(S: State): Callback = Callback(println(S.rankings.size))
 
-    def setTypeToRank(event: ReactEventI): Callback = {
+    def setTypeToRank(event: ReactEventFromInput): Callback = {
       val input = event.target.value
       $.modState(_.copy(typeToRank = input))
     }
 
-    def changeDeviation(event: ReactEventI): Callback = {
+    def changeDeviation(event: ReactEventFromInput): Callback = {
       val input = event.target.value
       $.modState(_.copy(deviation = input.toInt))
     }
@@ -254,7 +255,7 @@ object OrdinalModal {
 
     def onClose(P: Props): Callback = P.onClose() >> resetState
 
-    def handleKeyDown(P: Props, S: State)(e: ReactKeyboardEventI): Callback = {
+    def handleKeyDown(P: Props, S: State)(e: ReactKeyboardEventFromInput): Callback = {
       if (e.nativeEvent.keyCode == KeyCode.Escape) {
         onClose(P)
       }
@@ -264,13 +265,13 @@ object OrdinalModal {
   }
 
 
-  val component = ReactComponentB[Props]("Modal")
+  val component = ScalaComponent.builder[Props]("Modal")
     .initialState(State())
     .renderBackend[Backend]
     .build
 
 
   def apply(isOpen: Boolean, onClose: () => Callback, sendMethod: Seq[String] => Callback, currentModel: Tree)
-  = component.set()(Props(isOpen, onClose, sendMethod, currentModel))
+  = component(Props(isOpen, onClose, sendMethod, currentModel))
 
 }

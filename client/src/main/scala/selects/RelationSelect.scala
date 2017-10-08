@@ -1,8 +1,8 @@
 package selects
 
 import diode.Action
-import japgolly.scalajs.react.vdom.prefix_<^.{<, _}
-import japgolly.scalajs.react.{BackendScope, Callback, ReactComponentB, _}
+import japgolly.scalajs.react.vdom.html_<^.{<, _}
+import japgolly.scalajs.react.{BackendScope, Callback, ScalaComponent, _}
 import org.scalajs.dom.document
 import shared._
 
@@ -43,13 +43,13 @@ object RelationSelect {
   class Backend($: BackendScope[Props, State]) {
     def render(P: Props, S: State) =
       <.select(
-        selectStyle(P),
+        selectStyle(P).toTagMod,
         ^.value := {
           if (S.value.isEmpty) P.value else S.value
         },
         ^.onChange ==> onChange(P, S)
       )(
-        relationList.map(x => <.option(x))
+        relationList.map(x => <.option(x)).toTagMod
       )
 
     def saveScrollPos(P: Props): Callback = {
@@ -61,7 +61,7 @@ object RelationSelect {
       }
     }
 
-    def onChange(P: Props, S: State)(e: ReactEventI): Callback = {
+    def onChange(P: Props, S: State)(e: ReactEventFromInput): Callback = {
       e.preventDefault()
 
       val newRel = e.target.value
@@ -73,7 +73,7 @@ object RelationSelect {
         }
       else
         P.setNewRelation match {
-          case Some(setRelation) => setRelation(Some(RelationType(newRel))) >> $.setState(s = S.copy(value = e.target.value))
+          case Some(setRelation) => setRelation(Some(RelationType(newRel))) >> $.setState(S.copy(value = e.target.value))
           case None => Callback(println("Error: Missing setNewRelation method"))
         }
     }
@@ -82,13 +82,13 @@ object RelationSelect {
   }
 
 
-  val component = ReactComponentB[Props]("RelationSelect")
+  val component = ScalaComponent.builder[Props]("RelationSelect")
     .initialState(State(value = ""))
     .renderBackend[Backend]
     .build
 
 
   def apply(value: String, dispatch: Option[Action => Callback], updateRel: Option[Option[RelationType] => Action], isModelValue: Boolean, setNewRelation: Option[Option[RelationType] => Callback], saveScrollPosition: Option[Double => Callback])
-  = component.set()(Props(value, dispatch, updateRel, isModelValue, setNewRelation, saveScrollPosition))
+  = component(Props(value, dispatch, updateRel, isModelValue, setNewRelation, saveScrollPosition))()
 
 }

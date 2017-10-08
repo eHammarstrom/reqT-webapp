@@ -4,10 +4,10 @@ package main
   * Created by phiped on 5/25/17.
   */
 
-import scalacss.Defaults._
+import scalacss.ProdDefaults._
 import scalacss.ScalaCssReact._
-import japgolly.scalajs.react.vdom.prefix_<^.{<, ^, _}
-import japgolly.scalajs.react.{BackendScope, Callback, ReactComponentB}
+import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.{BackendScope, Callback, ScalaComponent}
 import japgolly.scalajs.react._
 import shared._
 import upickle.default.write
@@ -77,7 +77,7 @@ object ElementList {
   }
 
 
-  val listElem = ReactComponentB[String]("listElem")
+  val listElem = ScalaComponent.builder[String]("listElem")
     .render($ => <.ul(
       Style.listElemStyle,
       ^.draggable := true,
@@ -94,12 +94,12 @@ object ElementList {
     )
     .build
 
-  val entityListView = ReactComponentB[Seq[String]]("entityList")
+  val entityListView = ScalaComponent.builder[Seq[String]]("entityList")
     .render(elems => <.pre(
-      Style.entityListStyle,
       ^.className := "form-control",
       ^.id := "dragList",
-      elems.props.sorted.map(listElem(_))
+      //Style.entityListStyle,
+      elems.props.sorted.map(listElem(_)).toTagMod
     ))
     .build
 
@@ -114,7 +114,7 @@ object ElementList {
       )
     }
 
-    val searchBox = ReactComponentB[Unit]("searchBox")
+    val searchBox = ScalaComponent.builder[Unit]("searchBox")
       .render(_ => <.form(
         <.input.text(
           ^.className := "form-control",
@@ -124,7 +124,7 @@ object ElementList {
       )
       ).build
 
-    val checkBoxes = ReactComponentB[State]("checkBoxes")
+    val checkBoxes = ScalaComponent.builder[State]("checkBoxes")
       .render($ =>
         <.div(
           <.input.checkbox(
@@ -138,7 +138,7 @@ object ElementList {
         ))
       .build
 
-    def toggleEntity(S: State)(event: ReactEventI): Callback = {
+    def toggleEntity(S: State)(event: ReactEventFromInput): Callback = {
       if (S.showEntity && S.showAttribute)
         $.modState(_.copy(elems = attributes, showEntity = !S.showEntity))
       else if (S.showAttribute || S.showEntity)
@@ -147,7 +147,7 @@ object ElementList {
         $.modState(_.copy(elems = entities, showEntity = !S.showEntity))
     }
 
-    def toggleAttribute(S: State)(event: ReactEventI): Callback = {
+    def toggleAttribute(S: State)(event: ReactEventFromInput): Callback = {
       if (S.showAttribute && S.showEntity)
         $.modState(_.copy(elems = entities, showAttribute = !S.showAttribute))
       else if (S.showAttribute || S.showEntity)
@@ -156,7 +156,7 @@ object ElementList {
         $.modState(_.copy(elems = attributes, showAttribute = !S.showAttribute))
     }
 
-    def onTextChange(event: ReactEventI): Callback =
+    def onTextChange(event: ReactEventFromInput): Callback =
       event.extract(_.target.value.toLowerCase) {
         case "entity" | "entities" => $.modState(_.copy(elems = entities))
         case "attribute" | "attributes" => $.modState(_.copy(elems = attributes))
@@ -165,13 +165,13 @@ object ElementList {
   }
 
 
-  val component = ReactComponentB[Unit]("ElementList")
+  val component = ScalaComponent.builder[Unit]("ElementList")
     .initialState(State(elems = elems))
     .renderBackend[Backend]
     .build
 
 
-  def apply() = component.set()()
+  def apply() = component()
 
 }
 

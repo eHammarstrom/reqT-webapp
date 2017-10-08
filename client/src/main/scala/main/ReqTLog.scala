@@ -3,7 +3,7 @@ package main
 import java.util.concurrent.TimeUnit
 
 import diode.react.ModelProxy
-import japgolly.scalajs.react.vdom.prefix_<^.{<, _}
+import japgolly.scalajs.react.vdom.html_<^.{<, _}
 import japgolly.scalajs.react._
 import org.scalajs.dom
 import org.scalajs.dom.document
@@ -41,7 +41,7 @@ object ReqTLog {
           yield sendMessage(websocket, S.message)
       }
 
-      def handleKeyDown(event: ReactKeyboardEventI): Option[Callback] = {
+      def handleKeyDown(event: ReactKeyboardEventFromInput): Option[Callback] = {
         if (event.nativeEvent.keyCode == KeyCode.Enter)
           send
         else
@@ -80,7 +80,7 @@ object ReqTLog {
       )
     }
 
-    val log = ReactComponentB[Vector[String]]("log")
+    val log = ScalaComponent.builder[Vector[String]]("log")
       .render($ =>
         <.pre(
           ^.className := "form-control",
@@ -92,7 +92,8 @@ object ReqTLog {
           ^.overflowX.hidden,
           ^.whiteSpace.`pre-line`,
           ^.wordBreak := "break-word",
-          $.props.map(<.p(_)))
+          $.props.map(<.p(_)).toTagMod
+        )
       )
       .componentDidUpdate(_ => updateScroll)
       .componentDidMount(_ => Callback({
@@ -114,7 +115,7 @@ object ReqTLog {
     }
 
 
-    def onChange(event: ReactEventI): Callback = {
+    def onChange(event: ReactEventFromInput): Callback = {
       val newMessage = event.target.value
       $.modState(_.copy(message = newMessage))
     }
@@ -136,7 +137,7 @@ object ReqTLog {
 
     def sendMessages(websocket: WebSocket, msg: Seq[String]): Unit = {
       msg.foreach(sendMessage(websocket, _).runNow())
-      $.accessDirect.modState(_.copy(isMethodRunning = true))
+      $.modState(_.copy(isMethodRunning = true))
     }
 
     def receiveModel(S: State, P: Props, tree: Tree): Unit = {
@@ -152,30 +153,30 @@ object ReqTLog {
       def connect = CallbackTo[WebSocket] {
 
         // Get direct access so WebSockets API can modify state directly.
-        val direct = $.accessDirect
+        //val direct = $.accessDirect // removed from 1.0.0
 
         def onopen(event: Event): Unit = {
-          direct.modState(_.log("Connected."))
+          $.modState(_.log("Connected."))
         }
 
 
         def onmessage(event: MessageEvent): Unit = {
           if (event.data.toString.startsWith("{")) {
             val tree = read[Model](event.data.toString).tree
-            receiveModel(direct.state, P, tree)
+            receiveModel($.state.runNow(), P, tree)
           } else {
-            direct.modState(_.log(s"${event.data.toString}"))
+            $.modState(_.log(s"${event.data.toString}"))
           }
-          direct.modState(_.copy(waitingForModel = false))
+          $.modState(_.copy(waitingForModel = false))
         }
 
         def onerror(event: ErrorEvent): Unit = {
-          direct.modState(_.log(s"Error: ${event.message}"))
+          $.modState(_.log(s"Error: ${event.message}"))
         }
 
         def onclose(webSocket: WebSocket)(event: CloseEvent): Unit = {
           webSocket.close()
-          direct.modState(_.copy(websocket = None).log(s"Closed: ${event.reason}"))
+          $.modState(_.copy(websocket = None).log(s"Closed: ${event.reason}"))
         }
 
 
@@ -207,13 +208,13 @@ object ReqTLog {
   }
 
 
-  val component = ReactComponentB[Props]("ReqTLog")
+  val component = ScalaComponent.builder[Props]("ReqTLog")
     .initialState(State(None, Vector.empty, message = ""))
     .renderBackend[Backend]
     .componentDidMount(x => x.backend.start(x.props))
     .componentWillReceiveProps(
       x => if (x.nextProps.runMethod) {
-        x.$.backend.sendMessages(x.$.state.websocket.get, x.nextProps.getMethod())
+        x.backend.sendMessages(x.state.websocket.get, x.nextProps.getMethod())
         x.nextProps.methodDone
       }
       else Callback()
@@ -222,7 +223,7 @@ object ReqTLog {
     .build
 
 
-  def apply(proxy: ModelProxy[Tree], openNewModelModal: (String, Tree) => Callback, getMethod: () => Seq[String], runMethod: Boolean, methodDone: Callback)
-  = component.set()(Props(proxy, openNewModelModal, getMethod, runMethod, methodDone))
+  def apply(proxy: ModelProxy[Tree], openNewModelModal: (String, Tree) => Callback, getMethod: () => Seq[String], runMethod: Boolean, methodDone: Callback) =
+    component(Props(proxy, openNewModelModal, getMethod, runMethod, methodDone))
 
 }

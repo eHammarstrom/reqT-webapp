@@ -1,12 +1,12 @@
 package selects
 
-import japgolly.scalajs.react.vdom.prefix_<^.{<, _}
-import japgolly.scalajs.react.{BackendScope, Callback, ReactComponentB, _}
+import japgolly.scalajs.react.vdom.html_<^.{<, _}
+import japgolly.scalajs.react.{BackendScope, Callback, ScalaComponent, _}
 import shared._
 
 object AttributeSelect {
 
-  def selectStyle() = Seq(
+  val selectStyle = Seq(
     ^.className := "form-control pull-right",
     ^.width := "155px",
     ^.height := "100%",
@@ -28,38 +28,38 @@ object AttributeSelect {
   class Backend($: BackendScope[Props, State]) {
     def render(P: Props, S: State) =
       <.select(
-        selectStyle(),
+        selectStyle.toTagMod,
         ^.value := {
           if (S.value.isEmpty) P.value else S.value
         },
         ^.onChange ==> onChange(P, S)
       )(
-        P.isIntAttr ?= intAttributeList.map(x => <.option(x)),
-        !P.isIntAttr ?= stringAttributeList.map(x => <.option(x))
+        intAttributeList.map(x => <.option(x)).toTagMod.when(P.isIntAttr),
+        stringAttributeList.map(x => <.option(x)).toTagMod.when(!P.isIntAttr)
       )
 
 
-    def onChange(P: Props, S: State)(e: ReactEventI): Callback = {
+    def onChange(P: Props, S: State)(e: ReactEventFromInput): Callback = {
       val newAttr = e.target.value
       e.preventDefault()
 
       if (P.isIntAttr) {
         val attribute = Some(IntAttribute(newAttr))
-        P.setNewAttribute(attribute) >> $.setState(s = S.copy(value = newAttr))
+        P.setNewAttribute(attribute) >> $.setState(S.copy(value = newAttr))
       } else {
         val attribute = Some(StringAttribute(newAttr))
-        P.setNewAttribute(attribute) >> $.setState(s = S.copy(value = newAttr))
+        P.setNewAttribute(attribute) >> $.setState(S.copy(value = newAttr))
       }
     }
   }
 
-  val component = ReactComponentB[Props]("RelationSelect")
+  val component = ScalaComponent.builder[Props]("RelationSelect")
     .initialState(State(value = ""))
     .renderBackend[Backend]
     .build
 
 
   def apply(value: String, isIntAttr: Boolean, setNewAttribute: Option[Attribute] => Callback)
-  = component.set()(Props(value, isIntAttr, setNewAttribute))
+  = component(Props(value, isIntAttr, setNewAttribute))()
 
 }
