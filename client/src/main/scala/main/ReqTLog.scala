@@ -26,15 +26,12 @@ object ReqTLog {
 
   class Backend($: BackendScope[Props, State]) {
 
-
     def render(P: Props, S: State) = {
-
 
       val sendVerify: Option[Callback] = {
         for (websocket <- S.websocket if P.proxy.value.toString.nonEmpty)
           yield sendMessage(websocket, P.proxy.value.makeString.replaceAll("\n", ""))
       }
-
 
       val send: Option[Callback] = {
         for (websocket <- S.websocket if S.message.nonEmpty)
@@ -114,12 +111,10 @@ object ReqTLog {
       })
     }
 
-
     def onChange(event: ReactEventFromInput): Callback = {
       val newMessage = event.target.value
       $.modState(_.copy(message = newMessage))
     }
-
 
     def sendMessage(websocket: WebSocket, msg: String): Callback = {
       def send(msg: String) = Callback(websocket.send(msg))
@@ -134,7 +129,6 @@ object ReqTLog {
         send(msg) >> updateState
     }
 
-
     def sendMessages(websocket: WebSocket, msg: Seq[String]): Unit = {
       msg.foreach(sendMessage(websocket, _).runNow())
       $.modState(_.copy(isMethodRunning = true))
@@ -148,37 +142,30 @@ object ReqTLog {
     }
 
     def start(P: Props): Callback = {
-
       // This will establish the connection and return the WebSocket
       def connect = CallbackTo[WebSocket] {
-
-        // Get direct access so WebSockets API can modify state directly.
-        //val direct = $.accessDirect // removed from 1.0.0
-
         def onopen(event: Event): Unit = {
-          $.modState(_.log("Connected."))
+          $.modState(_.log("Connected.")).runNow()
         }
-
 
         def onmessage(event: MessageEvent): Unit = {
           if (event.data.toString.startsWith("{")) {
             val tree = read[Model](event.data.toString).tree
             receiveModel($.state.runNow(), P, tree)
           } else {
-            $.modState(_.log(s"${event.data.toString}"))
+            $.modState(_.log(s"${event.data.toString}")).runNow()
           }
-          $.modState(_.copy(waitingForModel = false))
+          $.modState(_.copy(waitingForModel = false)).runNow()
         }
 
         def onerror(event: ErrorEvent): Unit = {
-          $.modState(_.log(s"Error: ${event.message}"))
+          $.modState(_.log(s"Error: ${event.message}")).runNow()
         }
 
         def onclose(webSocket: WebSocket)(event: CloseEvent): Unit = {
           webSocket.close()
-          $.modState(_.copy(websocket = None).log(s"Closed: ${event.reason}"))
+          $.modState(_.copy(websocket = None).log(s"Closed: ${event.reason}")).runNow()
         }
-
 
         val url = Config().socketURL
 
@@ -207,7 +194,6 @@ object ReqTLog {
 
   }
 
-
   val component = ScalaComponent.builder[Props]("ReqTLog")
     .initialState(State(None, Vector.empty, message = ""))
     .renderBackend[Backend]
@@ -221,7 +207,6 @@ object ReqTLog {
     )
     .componentWillUnmount(_.backend.end)
     .build
-
 
   def apply(proxy: ModelProxy[Tree], openNewModelModal: (String, Tree) => Callback, getMethod: () => Seq[String], runMethod: Boolean, methodDone: Callback) =
     component(Props(proxy, openNewModelModal, getMethod, runMethod, methodDone))
