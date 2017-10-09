@@ -39,8 +39,6 @@ object ElementList {
     )
   }
 
-
-
   val entities = List("Ent", "Meta", "Item", "Label", "Section", "Term", "Actor", "App", "Component", "Domain", "Module", "Product", "Release", "Resource", "Risk", "Service",
     "Stakeholder", "System", "User", "Class", "Data", "Input", "Member", "Output", "Relationship", "Design", "Screen", "MockUp", "Function", "Interface", "State", "Event",
     "Epic", "Feature", "Goal", "Idea", "Issue", "Req", "Ticket", "WorkPackage", "Breakpoint", "Barrier", "Quality", "Target", "Scenario", "Task", "Test", "Story", "UseCase",
@@ -98,7 +96,7 @@ object ElementList {
     .render(elems => <.pre(
       ^.className := "form-control",
       ^.id := "dragList",
-      //Style.entityListStyle,
+      Style.entityListStyle,
       elems.props.sorted.map(listElem(_)).toTagMod
     ))
     .build
