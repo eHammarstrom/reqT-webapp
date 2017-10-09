@@ -24,7 +24,7 @@ object EntitySelect {
     },
     ^.textAlign.center,
     ^.textAlignLast.center
-  )
+  ).toTagMod
 
   case class Props(value: String, setNewEntity: Option[Entity] => Callback, isModelValue: Boolean)
 
@@ -34,7 +34,7 @@ object EntitySelect {
   class Backend($: BackendScope[Props, State]) {
     def render(P: Props, S: State) =
       <.select(
-        selectStyle(P).toTagMod,
+        selectStyle(P),
         ^.value := {
           if (S.value.isEmpty) P.value else S.value
         },

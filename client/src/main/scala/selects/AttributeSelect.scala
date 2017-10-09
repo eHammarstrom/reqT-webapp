@@ -14,7 +14,7 @@ object AttributeSelect {
     ^.background := "white",
     ^.textAlign.center,
     ^.textAlignLast.center
-  )
+  ).toTagMod
 
   case class Props(value: String, isIntAttr: Boolean, setNewAttribute: Option[Attribute] => Callback)
 
@@ -28,7 +28,7 @@ object AttributeSelect {
   class Backend($: BackendScope[Props, State]) {
     def render(P: Props, S: State) =
       <.select(
-        selectStyle.toTagMod,
+        selectStyle,
         ^.value := {
           if (S.value.isEmpty) P.value else S.value
         },

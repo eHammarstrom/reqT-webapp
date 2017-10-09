@@ -7,6 +7,7 @@ import japgolly.scalajs.react.vdom.html_<^.{^, _}
 import japgolly.scalajs.react._
 
 import scalacss.ScalaCssReact._
+import scalacss.ProdDefaults._
 import scala.scalajs.js
 import shared.{Elem, _}
 import diode.NoAction
@@ -53,15 +54,13 @@ object ReactTreeView {
   case class ToggleCollapsed(uuid: UUID) extends Action
 
   trait Style {
-    def reactTreeView = Seq[TagMod]( ^.outline := "none")
+    val reactTreeView = ^.outline := "none"
 
-    def treeGroup = Seq(^.padding := "0 0 0 40px")
+    val treeGroup = ^.padding := "0 0 0 40px"
 
-    def treeItem = Seq(
-      ^.listStyleType := "none"
-    )
+    val treeItem = ^.listStyleType := "none"
 
-    def treeItemDiv = Seq(
+    val treeItemDiv = Seq(
       ^.boxShadow := "5px 6px 12px 0px rgba(0,0,0,0.2)",
       ^.overflow.visible,
       ^.position.relative,
@@ -74,9 +73,9 @@ object ReactTreeView {
       ^.key := "toggle",
       ^.className := "container",
       ^.draggable := true
-    )
+    ).toTagMod
 
-    def treeItemIdDiv = Seq(
+    val treeItemIdDiv = Seq(
       ^.className := "row",
       ^.overflow.hidden,
       ^.unselectable := "true",
@@ -88,9 +87,9 @@ object ReactTreeView {
       ^.paddingLeft := "0px",
       ^.paddingRight := "0px",
       ^.fontSize := "medium"
-    )
+    ).toTagMod
 
-    def treeItemBefore = Seq(
+    val treeItemBefore = Seq(
       ^.position := "absolute",
       ^.height := "100.%%",
       ^.left := "2.%%",
@@ -99,9 +98,9 @@ object ReactTreeView {
       ^.color := "grey",
       ^.textAlign := "center",
       ^.width := "11px"
-    )
+    ).toTagMod
 
-    def attributeDiv = Seq(
+    val attributeDiv = Seq(
       ^.className := "col",
       ^.height := "100%",
       ^.width := "40%",
@@ -111,9 +110,9 @@ object ReactTreeView {
       ^.left := "0%",
       ^.paddingTop := "3%",
       ^.paddingLeft := "3%"
-    )
+    ).toTagMod
 
-    def elemDiv1 = Seq(
+    val elemDiv1 = Seq(
       ^.fontStyle.oblique,
       ^.className := "col",
       ^.height := "100%",
@@ -124,9 +123,9 @@ object ReactTreeView {
       ^.left := "0%",
       ^.paddingTop := "3%",
       ^.paddingLeft := "3%"
-    )
+    ).toTagMod
 
-    def elemDiv2 = Seq(
+    val elemDiv2 = Seq(
       ^.width := "0px",
       ^.height := "100%",
       ^.float.left,
@@ -136,9 +135,9 @@ object ReactTreeView {
       ^.top := "0px",
       ^.bottom := "0px",
       ^.opacity := "0.5"
-    )
+    ).toTagMod
 
-    def elemDiv3 = Seq(
+    val elemDiv3 = Seq(
       ^.className := "col",
       ^.height := "100%",
       ^.width := "70%",
@@ -150,11 +149,11 @@ object ReactTreeView {
       ^.overflow.hidden,
       ^.textAlign.justify,
       ^.fontSize.small
-    )
+    ).toTagMod
 
-    def treeItemHasChildrenClosed = Seq(^.contentStyle := "▶")
+    val treeItemHasChildrenClosed = ^.contentStyle := "▶"
 
-    def treeItemHasChildrenOpened = Seq(^.contentStyle := "▼")
+    val treeItemHasChildrenOpened = ^.contentStyle := "▼"
   }
 
   def getRelationType(treeItem: TreeItem): Option[String] = {
@@ -314,7 +313,7 @@ object ReactTreeView {
         DeleteModal(S.openModals.isDeleteModalOpen, closeDeleteModal, S.modelProps.treeItem, S.modelProps.dispatch, S.modelProps.path),
         EditModal(S.openModals.isEditModalOpen, closeEditModal, S.modelProps.treeItem, S.modelProps.dispatch, S.modelProps.path),
         AddElemModal(S.openModals.isAddElemModalOpen, closeAddElemModal, S.modelProps.treeItem, S.modelProps.dispatch, S.modelProps.path, S.modelProps.elemToAdd, S.modelProps.addToPlaceholder),
-        P.style.reactTreeView.toTagMod)(
+        P.style.reactTreeView)(
         <.div(
           ReactSearchBox(onTextChange = onTextChange).when(P.showSearchBox)
         ),
@@ -638,7 +637,7 @@ object ReactTreeView {
             ^.onClick ==> onTreeMenuToggle(P),
             ^.onDblClick ==> preventDefault,
             ^.key := "arrow",
-            P.style.treeItemBefore.toTagMod,
+            P.style.treeItemBefore,
             "▼"
           )
         else if (P.root.children.nonEmpty && S.children.isEmpty)
@@ -646,7 +645,7 @@ object ReactTreeView {
             ^.onClick ==> onTreeMenuToggle(P),
             ^.onDblClick ==> preventDefault,
             ^.key := "arrow",
-            P.style.treeItemBefore.toTagMod,
+            P.style.treeItemBefore,
             "▶"
           )
         else ""
@@ -666,9 +665,9 @@ object ReactTreeView {
           ^.borderTopLeftRadius := "5px",
           ^.marginBottom := "-1px",
           ^.marginRight := "-1px",
-          P.style.treeItem.toTagMod,
+          P.style.treeItem,
           <.div(
-            P.style.treeItemDiv.toTagMod,
+            P.style.treeItemDiv,
             ^.borderBottomRightRadius := {
               if (P.root.children.isEmpty) "5px" else "0px"
             },
@@ -692,13 +691,13 @@ object ReactTreeView {
             dragOverStyle(P).toTagMod.when(S.draggedOver),
             <.div(
               ^.pointerEvents := "none",
-              P.style.treeItemIdDiv.toTagMod,
+              P.style.treeItemIdDiv,
               ^.id := P.root.itemToString,
               if (P.root.item.isInstanceOf[Elem]) {
                 Seq(
                   <.div(
                     ^.pointerEvents := "none",
-                    P.style.elemDiv1.toTagMod,
+                    P.style.elemDiv1,
                     ^.fontSize := {
                       if (P.root.nodeToString.length > 12) "small" else "medium"
                     },
@@ -706,11 +705,11 @@ object ReactTreeView {
                   ),
                   <.div(
                     ^.pointerEvents := "none",
-                    P.style.elemDiv2.toTagMod
+                    P.style.elemDiv2
                   ),
                   <.div(
                     ^.pointerEvents := "none",
-                    P.style.elemDiv3.toTagMod,
+                    P.style.elemDiv3,
                     ^.paddingTop := {
                       if (P.root.contentToString.length >= 38 || P.root.contentToString.contains("\n")) "1.8%" else "3%"
                     },
@@ -720,7 +719,7 @@ object ReactTreeView {
               } else {
                 <.div(
                   ^.pointerEvents := "none",
-                  P.style.attributeDiv.toTagMod,
+                  P.style.attributeDiv,
                   <.span(
                     ^.pointerEvents := "none",
                     P.root.nodeToString
@@ -763,7 +762,7 @@ object ReactTreeView {
           ),
           if (S.children.nonEmpty) {
             <.ul(
-              P.style.treeGroup.toTagMod,
+              P.style.treeGroup,
               ^.marginBottom := "0px",
               ^.onDragEnter ==> onDragEnterUL(P),
               ^.onDragLeave ==> onDragLeaveUL(P),

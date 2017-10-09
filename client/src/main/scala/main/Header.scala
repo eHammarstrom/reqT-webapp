@@ -24,13 +24,13 @@ object Header {
     ^.className := "btn btn-default navbar-btn",
     ^.margin := "5px",
     ^.padding := "10px"
-  )
+  ).toTagMod
 
   val headerBarStyle = Seq(
     ^.paddingLeft := "15px",
     ^.paddingRight := "15px",
     ^.className := "navbar navbar-default navbar-static-bottom"
-  )
+  ).toTagMod
 
   case class State(openModals: OpenModals = OpenModals())
 
@@ -77,7 +77,7 @@ object Header {
 
     val navigationBar = ScalaComponent.builder[(Props, State)]("navigationBar")
       .render($ => <.nav(
-        headerBarStyle.toTagMod,
+        headerBarStyle,
         headerButtons.map(x => buttonComponent((x, $.props._1, $.props._2))).toTagMod
       )
       ).build
@@ -92,7 +92,7 @@ object Header {
           str match {
             case "Import" =>
               <.label(
-                headerButtonStyle.toTagMod,
+                headerButtonStyle,
                 "Import",
                 <.input(
                   ^.`type` := "file",
@@ -103,13 +103,13 @@ object Header {
               )
             case "Export" =>
               <.button(
-                headerButtonStyle.toTagMod,
+                headerButtonStyle,
                 "Export",
                 ^.onClick --> Callback(downloadModel(P, S))
               )
             case "Copy Model" =>
               <.button(
-                headerButtonStyle.toTagMod,
+                headerButtonStyle,
                 "Copy Model",
                 ^.onClick --> openCopyModal
               )
@@ -117,32 +117,32 @@ object Header {
               TemplateSelect(P.openNewModelModal)
             case "100$" =>
               <.button(
-                headerButtonStyle.toTagMod,
+                headerButtonStyle,
                 "100$",
                 ^.onClick --> openDollarModal
               )
             case "Release" =>
               <.button(
-                headerButtonStyle.toTagMod,
+                headerButtonStyle,
                 "Release",
                 ^.onClick --> openReleaseModal
               )
             case "Ordinal" =>
               <.button(
-                headerButtonStyle.toTagMod,
+                headerButtonStyle,
                 "Ordinal Ranking",
                 ^.onClick --> openOrdinalModal
               )
             case "Help" =>
               <.button(
-                headerButtonStyle.toTagMod,
+                headerButtonStyle,
                 ^.className := "glyphicon glyphicon-question-sign pull-right",
                 ^.onClick --> openHelpModal
               )
             case _ =>
               <.button(
                 str,
-                headerButtonStyle.toTagMod,
+                headerButtonStyle,
                 ^.onClick --> Callback()
               )
           }

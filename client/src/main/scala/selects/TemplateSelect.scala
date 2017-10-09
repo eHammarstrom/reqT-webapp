@@ -12,7 +12,7 @@ object TemplateSelect {
 
   case class Props(openNewModelModal: (String, Tree) => Callback)
 
-  def contentStyle = Seq(
+  val contentStyle = Seq(
     ^.marginTop := "11px",
     ^.height := "70px",
     ^.width := "100px",
@@ -20,16 +20,16 @@ object TemplateSelect {
     ^.backgroundColor := "#f9f9f9",
     ^.minWidth := "200px",
     ^.zIndex := "9999"
-  )
+  ).toTagMod
 
-  def backdropStyle = Seq(
+  val backdropStyle = Seq(
     ^.position := "absolute",
     ^.width := "1000px",
     ^.height := "1000px",
     ^.top := "0px",
     ^.left := "0px",
     ^.zIndex := "9998"
-  )
+  ).toTagMod
 
   val templates = Seq("Goal-Design scale", "Why + Spec + Example", "Context Diagram I", "Context Diagram II",
     "Data dictionary", "State transition model", "Model with section", "Prioritization $100 method", "Prioritization Ordinal Ranking",
@@ -47,7 +47,7 @@ object TemplateSelect {
         <.span(^.className := "caret"),
         dropdownList(P).when(S.isOpen),
         <.div(
-          backdropStyle.toTagMod,
+          backdropStyle,
           ^.onClick --> closeDropdown
         ).when(S.isOpen)
       )
@@ -56,7 +56,7 @@ object TemplateSelect {
     val dropdownList = ScalaComponent.builder[Props]("dropdownList")
       .render(P =>
         <.div(
-          contentStyle.toTagMod,
+          contentStyle,
           templates.map(s => template((P.props, s))).toTagMod
         )
       )

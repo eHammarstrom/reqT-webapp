@@ -31,7 +31,7 @@ object RelationSelect {
     },
     ^.textAlign.center,
     ^.textAlignLast.center
-  )
+  ).toTagMod
 
   case class Props(value: String, dispatch: Option[Action => Callback], updateRel: Option[Option[RelationType] => Action], isModelValue: Boolean, setNewRelation: Option[Option[RelationType] => Callback], saveScrollPosition: Option[Double => Callback])
 
@@ -43,7 +43,7 @@ object RelationSelect {
   class Backend($: BackendScope[Props, State]) {
     def render(P: Props, S: State) =
       <.select(
-        selectStyle(P).toTagMod,
+        selectStyle(P),
         ^.value := {
           if (S.value.isEmpty) P.value else S.value
         },
