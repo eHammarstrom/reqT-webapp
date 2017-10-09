@@ -213,29 +213,29 @@ object ReactTreeView {
       S.copy(openModals = S.openModals.copy(isAddElemModalOpen = true),
         modelProps = ModelProps(treeItem = newTreeItem, path = newPath, dispatch = newDispatch, elemToAdd = newElem, addToPlaceholder = newAddToPlaceHolder)))
 
-    def handleKeyDown(P: Props)(e: ReactKeyboardEvent): Callback = {
+    def handleKeyDown(P: Props, S: State)(e: ReactKeyboardEvent): Callback = {
       if (e.nativeEvent.keyCode == KeyCode.Delete) {
-        P.modelProxy.dispatchCB(RemoveElem($.state.runNow().pathToSelected)) >>
-          P.modelProxy.dispatchCB(RemoveEmptyRelation($.state.runNow().pathToSelected.init))
+        P.modelProxy.dispatchCB(RemoveElem(S.pathToSelected)) >>
+          P.modelProxy.dispatchCB(RemoveEmptyRelation(S.pathToSelected.init))
       } else if (e.nativeEvent.keyCode == KeyCode.C && e.ctrlKey) {
-        $.modState(S => S.copy(pathToCopiedElem = S.pathToSelected, shouldCut = false))
+        $.modState(s => s.copy(pathToCopiedElem = s.pathToSelected, shouldCut = false))
       } else if (e.nativeEvent.keyCode == KeyCode.X && e.ctrlKey) {
-        $.modState(S => S.copy(pathToCopiedElem = S.pathToSelected, shouldCut = true))
+        $.modState(s => s.copy(pathToCopiedElem = s.pathToSelected, shouldCut = true))
       } else if (e.nativeEvent.keyCode == KeyCode.V && e.ctrlKey) {
-        if ($.state.runNow().shouldCut) {
+        if (S.shouldCut) {
           P.modelProxy.dispatchCB(
             MoveElem(
-              $.state.runNow().pathToCopiedElem,
-              $.state.runNow().pathToSelected, RelationType("has"))) >>
+              S.pathToCopiedElem,
+              S.pathToSelected, RelationType("has"))) >>
             P.modelProxy.dispatchCB(
-              RemoveElem($.state.runNow().pathToCopiedElem)) >>
+              RemoveElem(S.pathToCopiedElem)) >>
             P.modelProxy.dispatchCB(
-              RemoveEmptyRelation($.state.runNow().pathToCopiedElem.init))
+              RemoveEmptyRelation(S.pathToCopiedElem.init))
         } else {
           P.modelProxy.dispatchCB(
             CopyElem(
-              $.state.runNow().pathToCopiedElem,
-              $.state.runNow().pathToSelected, RelationType("has")))
+              S.pathToCopiedElem,
+              S.pathToSelected, RelationType("has")))
         }
       } else
         Callback()
@@ -312,7 +312,7 @@ object ReactTreeView {
     def render(P: Props, S: State) =
       <.div(
         ^.tabIndex := 0,
-        ^.onKeyDown ==> handleKeyDown(P),
+        ^.onKeyDown ==> handleKeyDown(P, S),
         ^.width := "100%",
         ^.height := "100%",
         DeleteModal(S.openModals.isDeleteModalOpen, closeDeleteModal, S.modelProps.treeItem, S.modelProps.dispatch, S.modelProps.path),
