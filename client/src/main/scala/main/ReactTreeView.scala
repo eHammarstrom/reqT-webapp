@@ -163,9 +163,7 @@ object ReactTreeView {
     }
   }
 
-  //type NodeC = DuringCallbackU[NodeProps, NodeState, NodeBackend]
-  //type NodeC = ScalaComponent.MountedPure[NodeProps, NodeState, NodeBackend]
-  type NodeC = ScalaComponent.MountedImpure[NodeProps, NodeState, NodeBackend]
+  type NodeC = ScalaComponent.MountedPure[NodeProps, NodeState, NodeBackend]
 
   case class State(filterText: String,
                    filterMode: Boolean,
@@ -215,21 +213,29 @@ object ReactTreeView {
       S.copy(openModals = S.openModals.copy(isAddElemModalOpen = true),
         modelProps = ModelProps(treeItem = newTreeItem, path = newPath, dispatch = newDispatch, elemToAdd = newElem, addToPlaceholder = newAddToPlaceHolder)))
 
-    def handleKeyDown(P: Props, St: State)(e: ReactKeyboardEvent): Callback = {
+    def handleKeyDown(P: Props)(e: ReactKeyboardEvent): Callback = {
       if (e.nativeEvent.keyCode == KeyCode.Delete) {
-        P.modelProxy.dispatchCB(RemoveElem(St.pathToSelected)) >>
-          P.modelProxy.dispatchCB(RemoveEmptyRelation(St.pathToSelected.init))
+        P.modelProxy.dispatchCB(RemoveElem($.state.runNow().pathToSelected)) >>
+          P.modelProxy.dispatchCB(RemoveEmptyRelation($.state.runNow().pathToSelected.init))
       } else if (e.nativeEvent.keyCode == KeyCode.C && e.ctrlKey) {
         $.modState(S => S.copy(pathToCopiedElem = S.pathToSelected, shouldCut = false))
       } else if (e.nativeEvent.keyCode == KeyCode.X && e.ctrlKey) {
         $.modState(S => S.copy(pathToCopiedElem = S.pathToSelected, shouldCut = true))
       } else if (e.nativeEvent.keyCode == KeyCode.V && e.ctrlKey) {
-        if (St.shouldCut) {
-          P.modelProxy.dispatchCB(MoveElem(St.pathToCopiedElem, St.pathToSelected, RelationType("has"))) >>
-            P.modelProxy.dispatchCB(RemoveElem(St.pathToCopiedElem)) >>
-            P.modelProxy.dispatchCB(RemoveEmptyRelation(St.pathToCopiedElem.init))
+        if ($.state.runNow().shouldCut) {
+          P.modelProxy.dispatchCB(
+            MoveElem(
+              $.state.runNow().pathToCopiedElem,
+              $.state.runNow().pathToSelected, RelationType("has"))) >>
+            P.modelProxy.dispatchCB(
+              RemoveElem($.state.runNow().pathToCopiedElem)) >>
+            P.modelProxy.dispatchCB(
+              RemoveEmptyRelation($.state.runNow().pathToCopiedElem.init))
         } else {
-          P.modelProxy.dispatchCB(CopyElem(St.pathToCopiedElem, St.pathToSelected, RelationType("has")))
+          P.modelProxy.dispatchCB(
+            CopyElem(
+              $.state.runNow().pathToCopiedElem,
+              $.state.runNow().pathToSelected, RelationType("has")))
         }
       } else
         Callback()
@@ -238,8 +244,10 @@ object ReactTreeView {
     def saveScrollPosition(position: Double): Callback = $.modState(s => s.copy(scrollPosition = position))
 
     def onNodeSelect(P: Props)(selected: NodeC): Callback = {
-      val path = (if (selected.props.parent.isEmpty) selected.props.root.uuid.toString
-      else selected.props.parent + "/" + selected.props.root.uuid).split("/")
+      val selectedProps = selected.props.runNow()
+
+      val path = (if (selectedProps.parent.isEmpty) selectedProps.root.uuid.toString
+      else selectedProps.parent + "/" + selectedProps.root.uuid).split("/")
 
       val savePath: Callback = $.modState(_.copy(pathToSelected = path))
 
@@ -247,17 +255,16 @@ object ReactTreeView {
         $.state.flatMap(
           _.selectedNode
             .filterNot(_ == selected)
-            .filter(_.isMounted.get)
-            .fold(Callback.empty)(n => Callback(n.modState(_.copy(selected = false))))
+            .fold(Callback.empty)(n => n.modState(_.copy(selected = false)))
         )
 
       val updateThis: Callback =
         $.modState(_.copy(selectedNode = selected, filterMode = false))
 
       val setSelection: Callback =
-        Callback(selected.modState(_.copy(selected = true)))
+        selected.modState(_.copy(selected = true))
 
-      val shouldUpdate: Callback = Callback(selected.modState(_.copy(shouldUpdate = true)))
+      val shouldUpdate: Callback = selected.modState(_.copy(shouldUpdate = true))
 
       shouldUpdate.runNow()
       removeSelection >> updateThis >> setSelection >> savePath
@@ -268,17 +275,16 @@ object ReactTreeView {
         $.state.flatMap(
           _.dragOverNode
             .filterNot(_ == draggedOver)
-            .filter(_.isMounted.get)
-            .fold(Callback.empty)(n => Callback(n.modState(_.copy(draggedOver = false))))
+            .fold(Callback.empty)(n => n.modState(_.copy(draggedOver = false)))
         )
 
       val updateThis: Callback =
         $.modState(_.copy(dragOverNode = draggedOver, filterMode = false))
 
       val setCurrent: Callback =
-        Callback(draggedOver.modState(S => S.copy(draggedOver = true, dragEnter = S.dragEnter + 1)))
+        draggedOver.modState(S => S.copy(draggedOver = true, dragEnter = S.dragEnter + 1))
 
-      val shouldUpdate: Callback = Callback(draggedOver.modState(_.copy(shouldUpdate = true)))
+      val shouldUpdate: Callback = draggedOver.modState(_.copy(shouldUpdate = true))
 
       shouldUpdate.runNow()
       removeCurrent >> updateThis >> setCurrent
@@ -289,14 +295,13 @@ object ReactTreeView {
         $.state.flatMap(
           _.dragOverNode
             .filterNot(_ == draggedOver)
-            .filter(_.isMounted.get)
-            .fold(Callback.empty)(n => Callback(n.modState(_.copy(draggedOver = false))))
+            .fold(Callback.empty)(n => n.modState(_.copy(draggedOver = false)))
         )
 
       val setRemove: Callback =
-        Callback(draggedOver.modState(_.copy(draggedOver = false)))
+        draggedOver.modState(_.copy(draggedOver = false))
 
-      val shouldUpdate: Callback = Callback(draggedOver.modState(_.copy(shouldUpdate = true)))
+      val shouldUpdate: Callback = draggedOver.modState(_.copy(shouldUpdate = true))
 
       shouldUpdate.runNow()
       removeCurrent >> setRemove
@@ -307,7 +312,7 @@ object ReactTreeView {
     def render(P: Props, S: State) =
       <.div(
         ^.tabIndex := 0,
-        ^.onKeyDown ==> handleKeyDown(P, S),
+        ^.onKeyDown ==> handleKeyDown(P),
         ^.width := "100%",
         ^.height := "100%",
         DeleteModal(S.openModals.isDeleteModalOpen, closeDeleteModal, S.modelProps.treeItem, S.modelProps.dispatch, S.modelProps.path),
@@ -522,32 +527,25 @@ object ReactTreeView {
       P.openDeleteModal(P.root, dispatch, path.split("/")) >> e.stopPropagationCB >> e.preventDefaultCB
     }
 
-    def dragOverStyle(P: NodeProps): Seq[TagMod] = {
-      Seq(
-        ^.border := "1px solid black",
-        if (P.root.item.isInstanceOf[Attribute]) ^.borderColor := "red" else ""
-      )
-    }
+    def dragOverStyle(P: NodeProps): TagMod = (Seq(
+      ^.border := "1px solid black",
+      if (P.root.item.isInstanceOf[Attribute]) ^.borderColor := "red" else ""
+    ): Seq[TagMod]).toTagMod
 
-    def selectedStyle(P: NodeProps): Seq[TagMod] = {
-      Seq(
-        ^.border := "1px solid darkblue"
-      )
-    }
+    def selectedStyle(P: NodeProps): TagMod = ^.border := "1px solid darkblue"
 
-    def placeholderStyle(P: NodeProps): Seq[TagMod] = {
-      Seq(^.opacity := "0.5",
-        ^.textAlign := "center",
-        ^.marginTop := "15px",
-        ^.marginBottom := "15px",
-        ^.verticalAlign := "center",
-        ^.width := "500px",
-        ^.borderRadius := "5px",
-        ^.height := "50px",
-        ^.border := "2px dashed",
-        ^.borderColor := "black"
-      )
-    }
+    def placeholderStyle(P: NodeProps): TagMod = Seq(
+      ^.opacity := "0.5",
+      ^.textAlign := "center",
+      ^.marginTop := "15px",
+      ^.marginBottom := "15px",
+      ^.verticalAlign := "center",
+      ^.width := "500px",
+      ^.borderRadius := "5px",
+      ^.height := "50px",
+      ^.border := "2px dashed",
+      ^.borderColor := "black"
+    ).toTagMod
 
     def setContentDivSize(content: String): Seq[TagMod] = {
       var cont: String = content
@@ -687,8 +685,8 @@ object ReactTreeView {
             ^.onDragOver ==> onDragOver(P),
             ^.onDragEnter ==> onDragEnter(P),
             ^.onDblClick ==> onDoubleClickTreeItem(P, S),
-            selectedStyle(P).toTagMod.when(S.selected),
-            dragOverStyle(P).toTagMod.when(S.draggedOver),
+            selectedStyle(P).when(S.selected),
+            dragOverStyle(P).when(S.draggedOver),
             <.div(
               ^.pointerEvents := "none",
               P.style.treeItemIdDiv,
@@ -734,8 +732,8 @@ object ReactTreeView {
             getRelationType(P.root) match {
               case Some(relation) =>
                 <.div(
-                  dragOverStyle(P).toTagMod.when(S.draggedOver),
-                  selectedStyle(P).toTagMod.when(S.selected),
+                  dragOverStyle(P).when(S.draggedOver),
+                  selectedStyle(P).when(S.selected),
                   ^.position.absolute,
                   ^.top := "-1%",
                   ^.height := "103%",
@@ -758,7 +756,7 @@ object ReactTreeView {
             ^.transform := {
               if (P.root.children.nonEmpty) "translate(40px,0px)" else "none"
             },
-            placeholderStyle(P).toTagMod.when(S.showTemp1)
+            placeholderStyle(P).when(S.showTemp1)
           ),
           if (S.children.nonEmpty) {
             <.ul(
@@ -793,7 +791,7 @@ object ReactTreeView {
             ^.transform := {
               if (P.root.item == "Model") "translate(40px,0px)" else "none"
             },
-            placeholderStyle(P).toTagMod.when(S.showTemp2)
+            placeholderStyle(P).when(S.showTemp2)
           )
         } else {
           <.div(^.pointerEvents := "none")
