@@ -131,7 +131,7 @@ object ReqTLog {
 
     def sendMessages(websocket: WebSocket, msg: Seq[String]): Unit = {
       msg.foreach(sendMessage(websocket, _).runNow())
-      $.modState(_.copy(isMethodRunning = true))
+      $.modState(_.copy(isMethodRunning = true)).runNow()
     }
 
     def receiveModel(S: State, P: Props, tree: Tree): Unit = {
