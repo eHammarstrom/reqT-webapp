@@ -202,7 +202,7 @@ object webApp extends js.JSApp {
           onClose = closeNewModelModal,
           saveModel = saveModel(_, _, P, S),
           S.newModel, S.saveModelType
-        )(),
+        ),
         contentDivStyle,
         <.div(
           ^.className := "header",
@@ -215,7 +215,7 @@ object webApp extends js.JSApp {
         ),
         <.div(
           cachedModelsDivStyle,
-          cachedModels((P, S))(),
+          cachedModels((P, S)),
           sc((proxy: ModelProxy[Tree]) => treeView((proxy, S)))()
         )
       )
